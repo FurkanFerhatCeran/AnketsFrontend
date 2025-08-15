@@ -1,9 +1,24 @@
-<!-- Register Sayfası HTML Template -->
-<!-- TODO: Kayıt formu oluştur -->
-<!-- TODO: Ad Soyad input alanı ekle -->
-<!-- TODO: Email input alanı ekle -->
-<!-- TODO: Password input alanı ekle -->
-<!-- TODO: Confirm Password input alanı ekle -->
-<!-- TODO: Kayıt Ol butonu ekle -->
-<!-- TODO: "Giriş Yap" linkini ekle -->
-<!-- TODO: Hata mesajları için alan ekle -->
+<div class="register-container">
+    <h2>Register</h2>
+    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+        <div class="form-group">
+            <label for="username">Username</label>
+            <input type="text" id="username" formControlName="username" required>
+        </div>
+        <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" formControlName="email" required>
+        </div>
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" formControlName="password" required>
+        </div>
+        <div class="form-group">
+            <label for="nameSurname">Full Name</label>
+            <input type="text" id="nameSurname" formControlName="nameSurname" required>
+        </div>
+        <button type="submit" [disabled]="!registerForm.valid">Register</button>
+        <div *ngIf="errorMessage" class="error-message">{{ errorMessage }}</div>
+    </form>
+    <p>Already have an account? <a routerLink="/login">Login here</a></p>
+</div>

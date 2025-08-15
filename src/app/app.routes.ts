@@ -1,12 +1,10 @@
-// App Routes
-// TODO: Angular routing konfigürasyonu
-// TODO: Login route (/login) - LoginComponent
-// TODO: Register route (/register) - RegisterComponent  
-// TODO: Dashboard route (/) - DashboardComponent + AuthGuard
-// TODO: Survey routes:
-//   - /surveys - SurveyListComponent + AuthGuard
-//   - /surveys/create - SurveyCreateComponent + AuthGuard
-//   - /surveys/:id/edit - SurveyEditComponent + AuthGuard
-//   - /survey/:id - SurveyTakeComponent (public)
-// TODO: Profile route (/profile) - ProfileComponent + AuthGuard
-// TODO: Wildcard route (**) - 404 component veya redirect
+import { Routes } from '@angular/router';
+import { LoginComponent } from './pages/auth/login/login.component';
+import { RegisterComponent } from './pages/auth/register/register.component';
+
+export const routes: Routes = [
+  { path: 'login', component: LoginComponent },
+  { path: 'register', component: RegisterComponent },
+  { path: '', redirectTo: '/login', pathMatch: 'full' },
+  { path: '**', redirectTo: '/login' } // 404 sayfası için
+];
