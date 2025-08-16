@@ -1,7 +1,49 @@
-/* Dashboard Sayfası CSS Stilleri */
-/* TODO: Dashboard container ve grid layout */
-/* TODO: İstatistik kartları için stiller */
-/* TODO: Son anketler liste stilleri */
-/* TODO: Hızlı işlem butonları stilleri */
-/* TODO: Grafik container stilleri */
-/* TODO: Responsive tasarım (mobile, tablet, desktop) */
+.dashboard-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 0;
+    border-bottom: 1px solid #eee;
+
+    .logout-btn {
+      background: #f44336;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+
+      &:hover {
+        background: #d32f2f;
+      }
+    }
+  }
+
+  nav {
+    margin: 20px 0;
+
+    ul {
+      list-style: none;
+      display: flex;
+      gap: 15px;
+      padding: 0;
+
+      li a {
+        text-decoration: none;
+        color: #333;
+        padding: 8px 16px;
+        border-radius: 4px;
+
+        &:hover, &.active {
+          background: #e3f2fd;
+          color: #1976d2;
+        }
+      }
+    }
+  }
+}

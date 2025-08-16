@@ -1,7 +1,17 @@
-<!-- Dashboard Sayfası HTML Template -->
-<!-- TODO: Hoş geldin mesajı ve kullanıcı adı -->
-<!-- TODO: İstatistik kartları (Toplam Anket, Aktif Anket, Toplam Yanıt) -->
-<!-- TODO: Son anketler listesi -->
-<!-- TODO: Hızlı işlem butonları -->
-<!-- TODO: Grafik alanı (Chart.js veya ng2-charts) -->
-<!-- TODO: Loading spinner alanı -->
+<div class="dashboard-container">
+  <header>
+    <h1>Hoş Geldiniz!</h1>
+    <button (click)="logout()" class="logout-btn">Çıkış Yap</button>
+  </header>
+
+  <nav>
+    <ul>
+      <li><a routerLink="/profile" routerLinkActive="active">Profilim</a></li>
+      <li><a routerLink="/settings" routerLinkActive="active">Ayarlar</a></li>
+    </ul>
+  </nav>
+
+  <main>
+    <router-outlet></router-outlet>
+  </main>
+</div>

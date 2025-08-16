@@ -4,6 +4,7 @@ import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import {
+    ApiErrorResponse,
     LoginRequest,
     LoginResponse,
     LogoutRequest,
@@ -15,7 +16,7 @@ import {
   providedIn: 'root'
 })
 export class AuthService {
-  private readonly apiUrl = `${environment.apiUrl}/api/auth`;
+  private readonly apiUrl = `${environment.apiUrl}/api/Auth`;
   private readonly httpOptions = {
     headers: new HttpHeaders({
       'Content-Type': 'application/json',
@@ -63,14 +64,45 @@ export class AuthService {
   }
 
   refreshToken(): Observable<LoginResponse> {
+    const refreshToken = this.getRefreshToken();
+    if (!refreshToken) {
+      return throwError(() => new Error('Refresh token not found'));
+    }
+
     return this.http.post<LoginResponse>(
       `${this.apiUrl}/refresh-token`, 
-      {}, 
+      { refreshToken }, 
       this.httpOptions
     ).pipe(
       map(response => this.handleAuthResponse(response)),
       catchError(error => this.handleError(error, 'Token refresh failed'))
     );
+  }
+
+  isLoggedIn(): boolean {
+    return !!this.getAccessToken();
+  }
+
+  getAccessToken(): string | null {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('access_token');
+    }
+    return null;
+  }
+
+  getRefreshToken(): string | null {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('refresh_token');
+    }
+    return null;
+  }
+
+  getUserData(): LoginResponse['user'] | null {
+    if (typeof window !== 'undefined') {
+      const userData = localStorage.getItem('user_data');
+      return userData ? JSON.parse(userData) : null;
+    }
+    return null;
   }
 
   private handleAuthResponse(authData: LoginResponse): LoginResponse {
@@ -81,13 +113,19 @@ export class AuthService {
   private storeAuthData(authData: LoginResponse): void {
     if (typeof window !== 'undefined') {
       localStorage.setItem('access_token', authData.token);
-      localStorage.setItem('user_data', JSON.stringify(authData.user));
+      if (authData.user) {
+        localStorage.setItem('user_data', JSON.stringify(authData.user));
+      }
+      if ((authData as any).refreshToken) {
+        localStorage.setItem('refresh_token', (authData as any).refreshToken);
+      }
     }
   }
 
-  private clearAuthData(): void {
+  clearAuthData(): void {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
       localStorage.removeItem('user_data');
     }
   }
@@ -96,22 +134,24 @@ export class AuthService {
     let errorMessage = defaultMessage;
     
     if (error.error instanceof ErrorEvent) {
-      // Client-side error
       console.error('Client error:', error.error.message);
       errorMessage = `${defaultMessage}: ${error.error.message}`;
     } else {
-      // Server-side error
       console.error(`Server error: ${error.status}`, error.error);
       
       if (error.status === 0) {
-        errorMessage = 'Server unavailable - Please check your connection';
+        errorMessage = 'Server unavailable. Please check your internet connection.';
       } else if (error.status === 401) {
-        errorMessage = 'Unauthorized - Please login again';
+        errorMessage = 'Unauthorized. Please login again.';
       } else if (error.status === 403) {
-        errorMessage = 'Forbidden - Insufficient permissions';
+        errorMessage = 'Insufficient permissions.';
+      } else if (error.status === 422) {
+        const apiError = error.error as ApiErrorResponse;
+        errorMessage = apiError.message || 'Invalid data submitted.';
       } else {
-        errorMessage = error.error?.message || error.message || defaultMessage;
-      }
+        const apiError = error.error as ApiErrorResponse;
+        errorMessage = apiError?.message || error.message || defaultMessage;
+      } 
     }
     
     return throwError(() => new Error(errorMessage));
