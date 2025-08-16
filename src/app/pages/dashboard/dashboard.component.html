@@ -1,17 +1,71 @@
 <div class="dashboard-container">
-  <header>
-    <h1>Hoş Geldiniz!</h1>
-    <button (click)="logout()" class="logout-btn">Çıkış Yap</button>
-  </header>
+  <mat-toolbar color="primary" class="mat-elevation-z4">
+    <button mat-icon-button (click)="toggleMenu()" aria-label="Toggle menu">
+      <mat-icon>menu</mat-icon>
+    </button>
+    <span class="app-title">Ankets</span>
+    
+    <span class="spacer"></span>
+    
+    <div class="quick-actions">
+      <button mat-icon-button matTooltip="Yeni Anket" (click)="quickAction('new-survey')" aria-label="New survey">
+        <mat-icon>add_circle</mat-icon>
+      </button>
+      <button mat-icon-button matTooltip="Bildirimler" (click)="quickAction('notifications')" aria-label="Notifications">
+        <mat-icon [matBadge]="notificationCount" matBadgeColor="warn">notifications</mat-icon>
+      </button>
+    </div>
+    
+    <div class="user-menu" [matMenuTriggerFor]="profileMenu" aria-label="User menu">
+      <div class="user-avatar" [matTooltip]="currentUser?.nameSurname">
+        {{ getInitials() }}
+      </div>
+      <span class="user-name">{{ currentUser?.nameSurname }}</span>
+      <mat-icon>arrow_drop_down</mat-icon>
+    </div>
+    
+    <mat-menu #profileMenu="matMenu">
+      <button mat-menu-item (click)="router.navigate(['/profile'])">
+        <mat-icon>account_circle</mat-icon>
+        <span>Profilim</span>
+      </button>
+      <button mat-menu-item (click)="router.navigate(['/settings'])">
+        <mat-icon>settings</mat-icon>
+        <span>Ayarlar</span>
+      </button>
+      <mat-divider></mat-divider>
+      <button mat-menu-item (click)="logout()">
+        <mat-icon>logout</mat-icon>
+        <span>Çıkış Yap</span>
+      </button>
+    </mat-menu>
+  </mat-toolbar>
 
-  <nav>
-    <ul>
-      <li><a routerLink="/profile" routerLinkActive="active">Profilim</a></li>
-      <li><a routerLink="/settings" routerLinkActive="active">Ayarlar</a></li>
-    </ul>
-  </nav>
+  <div class="dashboard-content">
+    <mat-sidenav-container class="sidenav-container">
+      <mat-sidenav #sidenav 
+                  [(opened)]="isMenuOpen" 
+                  [mode]="(isHandset$ | async) ? 'over' : 'side'"
+                  [fixedInViewport]="isHandset$ | async"
+                  [fixedTopGap]="64">
+        <mat-nav-list>
+          <a mat-list-item 
+             *ngFor="let item of menuItems" 
+             [routerLink]="item.route" 
+             routerLinkActive="active"
+             [routerLinkActiveOptions]="{exact: true}">
+            <mat-icon class="menu-icon">{{ item.icon }}</mat-icon>
+            <span class="menu-text">{{ item.name }}</span>
+            <span *ngIf="item.badge" class="badge">{{ item.badge }}</span>
+          </a>
+        </mat-nav-list>
+      </mat-sidenav>
 
-  <main>
-    <router-outlet></router-outlet>
-  </main>
+      <mat-sidenav-content>
+        <div class="content-wrapper">
+          <router-outlet></router-outlet>
+        </div>
+      </mat-sidenav-content>
+    </mat-sidenav-container>
+  </div>
 </div>

@@ -1,10 +1,18 @@
-// Survey Service
-// TODO: Survey CRUD işlemleri için service oluştur
-// TODO: getSurveys() - Anket listesi getir (pagination ile)
-// TODO: getSurveyById(id) - Tek anket getir
-// TODO: createSurvey(survey) - Yeni anket oluştur
-// TODO: updateSurvey(id, survey) - Anket güncelle
-// TODO: deleteSurvey(id) - Anket sil
-// TODO: activateSurvey(id) / deactivateSurvey(id) - Anket durumu
-// TODO: submitSurveyResponse(surveyId, response) - Anket yanıtı gönder
-// TODO: getSurveyStatistics(surveyId) - Anket istatistikleri
+import { Injectable } from '@angular/core';
+import { Observable, of } from 'rxjs';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class SurveyService {
+
+  constructor() { }
+
+  // Bu metot kullanıcının sahip olduğu anket sayısını simüle eder
+  getSurveyCount(): Observable<number> {
+    // Normalde burada backend'e HTTP isteği yapılır ve sayı çekilir.
+    // Şimdilik sabit bir değer döndürelim
+    const surveyCount = 5;
+    return of(surveyCount);
+  }
+}
