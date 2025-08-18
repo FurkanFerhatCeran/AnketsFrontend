@@ -1,185 +1,245 @@
-import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
-import { Injectable } from '@angular/core';
-import { Observable, of, throwError } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
-import { environment } from '../../environments/environment';
-import {
-  ApiErrorResponse,
-  LoginRequest,
-  LoginResponse,
-  LogoutRequest,
+import { Injectable, PLATFORM_ID, Inject } from '@angular/core';
+import { Observable, BehaviorSubject, throwError } from 'rxjs';
+import { tap, catchError } from 'rxjs/operators';
+import { isPlatformBrowser } from '@angular/common';
+import { 
+  LoginRequest, 
+  LoginResponse, 
+  RegisterRequest, 
+  RegisterResponse, 
+  LogoutRequest, 
   LogoutResponse,
-  RegisterRequest
+  ForgotPasswordResponse,
+  ResetPasswordResponse 
 } from '../models/auth/auth.models';
+import { ApiService } from './api.service';
 
-@Injectable({
-    providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class AuthService {
-    private readonly apiUrl = `${environment.apiUrl}/api/Auth`;
-    private readonly httpOptions = {
-        headers: new HttpHeaders({
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
+  private readonly ACCESS_TOKEN_KEY = 'accessToken';
+  private readonly USER_DATA_KEY = 'userData';
+
+  // Platform kontrolü için
+  private isBrowser: boolean;
+
+  // Kullanıcı durumu için BehaviorSubject
+  private currentUserSubject = new BehaviorSubject<any>(null);
+  public currentUser$ = this.currentUserSubject.asObservable();
+
+  constructor(
+    private apiService: ApiService,
+    @Inject(PLATFORM_ID) private platformId: Object
+  ) {
+    this.isBrowser = isPlatformBrowser(this.platformId);
+    
+    if (this.isBrowser) {
+      this.initializeAuthState();
+    }
+  }
+
+  private initializeAuthState(): void {
+    const userData = this.getUserDataFromStorage();
+    this.currentUserSubject.next(userData);
+    this.checkAuthState();
+  }
+
+  // 🔥 Giriş işlemi - LoginResponseDto yapısına göre
+  login(payload: LoginRequest): Observable<LoginResponse> {
+    return this.apiService.login(payload)
+      .pipe(
+        tap((response: LoginResponse) => {
+          console.log('✅ Login response:', response);
+          
+          // Backend'den LoginResponseDto geldiği için success kontrolü yok
+          // Sadece token var mı kontrol edelim
+          if (response.token) {
+            this.saveAuthData(response);
+          } else {
+            console.error('❌ Login response\'da token yok:', response);
+            throw new Error('Token alınamadı');
+          }
         }),
-        withCredentials: true
+        catchError(error => {
+          console.error('❌ Login error:', error);
+          return throwError(() => error);
+        })
+      );
+  }
+
+  // 🔥 Kayıt işlemi - RegisterResponseDto yapısına göre
+  register(payload: RegisterRequest): Observable<RegisterResponse> {
+    return this.apiService.register(payload)
+      .pipe(
+        tap((response: RegisterResponse) => {
+          console.log('✅ Register response:', response);
+          // RegisterResponseDto'da token yok, sadece user bilgileri var
+          // Bu yüzden kayıttan sonra otomatik login yok
+        }),
+        catchError(error => {
+          console.error('❌ Register error:', error);
+          return throwError(() => error);
+        })
+      );
+  }
+
+  // 🔥 Çıkış işlemi - LogoutResponseDto yapısına göre
+  logout(payload?: LogoutRequest): Observable<LogoutResponse> {
+    const logoutPayload = payload || {};
+    
+    return this.apiService.logout(logoutPayload)
+      .pipe(
+        tap((response: LogoutResponse) => {
+          console.log('✅ Logout response:', response);
+          this.clearAuthData();
+        }),
+        catchError(error => {
+          console.error('❌ Logout error:', error);
+          // Hata olsa bile auth data'yı temizle
+          this.clearAuthData();
+          return throwError(() => error);
+        })
+      );
+  }
+
+  // 🔥 Şifre unuttum - ForgotPasswordResponseDto yapısına göre
+  forgotPassword(email: string): Observable<ForgotPasswordResponse> {
+    return this.apiService.forgotPassword(email)
+      .pipe(
+        tap((response: ForgotPasswordResponse) => {
+          console.log('✅ Forgot password response:', response);
+        }),
+        catchError(error => {
+          console.error('❌ Forgot password error:', error);
+          return throwError(() => error);
+        })
+      );
+  }
+
+  // 🔥 Şifre sıfırlama - ResetPasswordResponseDto yapısına göre
+  resetPassword(email: string, token: string, newPassword: string): Observable<ResetPasswordResponse> {
+    return this.apiService.resetPassword({ email, token, newPassword })
+      .pipe(
+        tap((response: ResetPasswordResponse) => {
+          console.log('✅ Reset password response:', response);
+        }),
+        catchError(error => {
+          console.error('❌ Reset password error:', error);
+          return throwError(() => error);
+        })
+      );
+  }
+
+  // 🔥 Auth test
+  testAuth(): Observable<any> {
+    return this.apiService.testAuth();
+  }
+
+  // Access token'ı al
+  getAccessToken(): string | null {
+    if (!this.isBrowser) return null;
+    return localStorage.getItem(this.ACCESS_TOKEN_KEY);
+  }
+
+  // Refresh token (backend'de yok gibi görünüyor)
+  getRefreshToken(): string | null {
+    return null; // Backend'de refresh token yok
+  }
+
+  // Kullanıcı verilerini al
+  getUserData(): any {
+    if (!this.isBrowser) return null;
+    return this.getUserDataFromStorage();
+  }
+
+  // Giriş yapılmış mı kontrol et
+  isLoggedIn(): boolean {
+    if (!this.isBrowser) return false;
+    const token = this.getAccessToken();
+    const user = this.getUserData();
+    return !!(token && user);
+  }
+
+  // Token'ın geçerli olup olmadığını kontrol et (JWT parse)
+  isTokenValid(token: string): boolean {
+    if (!token || !this.isBrowser) return false;
+    
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const expiry = payload.exp * 1000;
+      return Date.now() < expiry;
+    } catch {
+      return false;
+    }
+  }
+
+  // 🔥 Auth verilerini kaydet - LoginResponseDto yapısına göre
+  private saveAuthData(response: LoginResponse): void {
+    if (!this.isBrowser) return;
+    
+    // Token'ı kaydet
+    localStorage.setItem(this.ACCESS_TOKEN_KEY, response.token);
+    
+    // User bilgilerini kaydet (LoginResponseDto'daki fieldlar)
+    const userData = {
+      userId: response.userId,
+      username: response.username,
+      email: response.email
     };
     
-    private readonly accessTokenKey = 'access_token';
-    private readonly refreshTokenKey = 'refresh_token';
-    private readonly userDataKey = 'user_data';
-
-    constructor(private http: HttpClient) { }
-
-    register(registerDto: RegisterRequest): Observable<LoginResponse> {
-        return this.http.post<LoginResponse>(
-            `${this.apiUrl}/register`, 
-            registerDto, 
-            this.httpOptions
-        ).pipe(
-            map(response => this.handleAuthResponse(response)),
-            catchError(error => this.handleError(error, 'Registration failed'))
-        );
-    }
-
-    login(loginDto: LoginRequest): Observable<LoginResponse> {
-        return this.http.post<LoginResponse>(
-            `${this.apiUrl}/login`, 
-            loginDto, 
-            this.httpOptions
-        ).pipe(
-            map(response => this.handleAuthResponse(response)),
-            catchError(error => this.handleError(error, 'Login failed'))
-        );
-    }
-
-    logout(dto?: LogoutRequest): Observable<LogoutResponse> {
-        if (dto) {
-            return this.http.post<LogoutResponse>(
-                `${this.apiUrl}/logout`, 
-                dto, 
-                this.httpOptions
-            ).pipe(
-                map(response => {
-                    this.clearAuthData();
-                    return response;
-                }),
-                catchError(error => {
-                    this.handleError(error, 'Logout failed');
-                    this.clearAuthData();
-                    return of({ success: false, message: 'Logout failed' });
-                })
-            );
-        } else {
-            this.clearAuthData();
-            return of({ success: true, message: 'Logged out locally' });
-        }
-    }
+    localStorage.setItem(this.USER_DATA_KEY, JSON.stringify(userData));
+    this.currentUserSubject.next(userData);
     
-    refreshToken(): Observable<LoginResponse> {
-        const refreshToken = this.getRefreshToken();
-        if (!refreshToken) {
-            this.clearAuthData();
-            return throwError(() => new Error('Refresh token not found'));
-        }
+    console.log('🔐 Auth data saved:', {
+      token: response.token.substring(0, 20) + '...',
+      user: userData
+    });
+  }
+
+  // Auth verilerini temizle
+  clearAuthData(): void {
+    if (!this.isBrowser) return;
     
-        return this.http.post<LoginResponse>(
-            `${this.apiUrl}/refresh-token`, 
-            { refreshToken }, 
-            this.httpOptions
-        ).pipe(
-            map(response => {
-                this.storeAuthData(response);
-                return response;
-            }),
-            catchError(error => {
-                this.handleError(error, 'Token refresh failed');
-                this.clearAuthData();
-                return throwError(() => new Error('Token refresh failed'));
-            })
-        );
-    }
+    localStorage.removeItem(this.ACCESS_TOKEN_KEY);
+    localStorage.removeItem(this.USER_DATA_KEY);
+    
+    this.currentUserSubject.next(null);
+    console.log('🗑️ Auth data cleared');
+  }
 
-    isLoggedIn(): boolean {
-        return !!this.getAccessToken();
+  // localStorage'dan kullanıcı verilerini al
+  private getUserDataFromStorage(): any {
+    if (!this.isBrowser) return null;
+    
+    try {
+      const userData = localStorage.getItem(this.USER_DATA_KEY);
+      return userData ? JSON.parse(userData) : null;
+    } catch (error) {
+      console.error('Kullanıcı verisi parse edilemedi:', error);
+      return null;
     }
+  }
 
-    getAccessToken(): string | null {
-        if (typeof window !== 'undefined') {
-            return localStorage.getItem(this.accessTokenKey);
-        }
-        return null;
+  // Uygulama başlatılırken auth durumunu kontrol et
+  private checkAuthState(): void {
+    if (!this.isBrowser) return;
+    
+    const token = this.getAccessToken();
+    const user = this.getUserData();
+    
+    if (token && user) {
+      // JWT token süresi kontrol et
+      if (!this.isTokenValid(token)) {
+        console.log('🕒 Token expired, clearing auth data');
+        this.clearAuthData();
+      } else {
+        console.log('✅ Auth state valid, user logged in');
+        this.currentUserSubject.next(user);
+      }
     }
+  }
 
-    getRefreshToken(): string | null {
-        if (typeof window !== 'undefined') {
-            return localStorage.getItem(this.refreshTokenKey);
-        }
-        return null;
-    }
-
-    getUserData(): LoginResponse['user'] | null {
-        if (typeof window !== 'undefined') {
-            const userData = localStorage.getItem(this.userDataKey);
-            try {
-                return userData ? JSON.parse(userData) : null;
-            } catch (e) {
-                console.error('Failed to parse user data from localStorage', e);
-                return null;
-            }
-        }
-        return null;
-    }
-
-    private handleAuthResponse(authData: LoginResponse): LoginResponse {
-        this.storeAuthData(authData);
-        return authData;
-    }
-
-    private storeAuthData(authData: LoginResponse): void {
-        if (typeof window !== 'undefined' && authData.token) {
-            localStorage.setItem(this.accessTokenKey, authData.token);
-            if (authData.user) {
-                localStorage.setItem(this.userDataKey, JSON.stringify(authData.user));
-            }
-            if ((authData as any).refreshToken) {
-                localStorage.setItem(this.refreshTokenKey, (authData as any).refreshToken);
-            }
-        }
-    }
-
-    clearAuthData(): void {
-        if (typeof window !== 'undefined') {
-            localStorage.removeItem(this.accessTokenKey);
-            localStorage.removeItem(this.refreshTokenKey);
-            localStorage.removeItem(this.userDataKey);
-        }
-    }
-
-    private handleError(error: HttpErrorResponse, defaultMessage: string): Observable<never> {
-        let errorMessage = defaultMessage;
-        
-        if (error.error instanceof ErrorEvent) {
-            console.error('Client error:', error.error.message);
-            errorMessage = `${defaultMessage}: ${error.error.message}`;
-        } else {
-            console.error(`Server error: ${error.status}`, error.error);
-            
-            if (error.status === 0) {
-                errorMessage = 'Server unavailable. Please check your internet connection.';
-            } else if (error.status === 401) {
-                errorMessage = 'Unauthorized. Please login again.';
-            } else if (error.status === 403) {
-                errorMessage = 'Insufficient permissions.';
-            } else if (error.status === 422) {
-                const apiError = error.error as ApiErrorResponse;
-                errorMessage = apiError.message || 'Invalid data submitted.';
-            } else {
-                const apiError = error.error as ApiErrorResponse;
-                errorMessage = apiError?.message || error.message || defaultMessage;
-            } 
-        }
-        
-        return throwError(() => new Error(errorMessage));
-    }
+  // Refresh token (backend'de yok)
+  refreshToken(): Observable<LoginResponse> {
+    return throwError(() => new Error('Refresh token endpoint mevcut değil'));
+  }
 }

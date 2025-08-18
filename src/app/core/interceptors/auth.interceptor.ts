@@ -2,7 +2,8 @@ import { HttpErrorResponse, HttpEvent, HttpHandlerFn, HttpInterceptorFn, HttpReq
 import { inject } from '@angular/core';
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { catchError, filter, switchMap, take } from 'rxjs/operators';
-import { AuthService } from '../../services/auth.service'; // Dosya yolu düzeltildi
+import { AuthService } from '../../services/auth.service';
+import { LoginResponse } from '../../models/auth/auth.models';
 
 let isRefreshing = false;
 let refreshTokenSubject = new BehaviorSubject<any>(null);
@@ -38,16 +39,19 @@ function handle401Error(request: HttpRequest<unknown>, next: HttpHandlerFn, auth
     isRefreshing = true;
     refreshTokenSubject.next(null);
 
-    return authService.refreshToken().pipe(
+    // 🔥 Backend'de refresh token endpoint'i yok, bu yüzden bu kısmı kaldıralım
+    // Veya authService.testAuth() ile token geçerliliğini test edebiliriz
+    return authService.testAuth().pipe(
       switchMap((response: any) => {
         isRefreshing = false;
-        const newToken = response?.token;
-        if (newToken) {
-          refreshTokenSubject.next(newToken);
-          return next(addToken(request, newToken));
+        // Test başarılıysa token hâlâ geçerli
+        const currentToken = authService.getAccessToken();
+        if (currentToken) {
+          refreshTokenSubject.next(currentToken);
+          return next(addToken(request, currentToken));
         } else {
           authService.clearAuthData();
-          return throwError(() => new Error('New token not found in refresh response.'));
+          return throwError(() => new Error('Token geçersiz, yeniden giriş yapın.'));
         }
       }),
       catchError((err: any) => {

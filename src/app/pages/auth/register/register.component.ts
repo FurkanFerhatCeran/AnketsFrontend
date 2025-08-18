@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
-import { RegisterRequest, LoginResponse } from '../../../models/auth/auth.models';
+import { RegisterRequest, RegisterResponse } from '../../../models/auth/auth.models';
+
 @Component({
   selector: 'app-register',
   standalone: true,
@@ -32,11 +33,11 @@ export class RegisterComponent {
     if (this.registerForm.valid) {
       const registerDto: RegisterRequest = this.registerForm.value;
       this.authService.register(registerDto).subscribe({
-        next: (response: LoginResponse) => {
+        next: (response: RegisterResponse) => {
           this.router.navigate(['/login']);
         },
-        error: (err) => {
-          this.errorMessage = err.error?.message || 'Registration failed. Please try again.';
+        error: (err: any) => {
+          this.errorMessage = err.error?.message || 'Kayıt işlemi başarısız. Lütfen tekrar deneyin.';
         }
       });
     }

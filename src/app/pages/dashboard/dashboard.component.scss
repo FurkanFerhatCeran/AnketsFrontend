@@ -1,171 +1,325 @@
-// src/app/pages/dashboard/dashboard.component.scss
+/* src/app/pages/dashboard/dashboard.component.scss */
 
-// Material renk paletlerini doğrudan kullanıyoruz
-$primary-color: #303f9f;  // indigo 700
-$accent-color: #ff4081;   // pink A200
-$warn-color: #f44336;     // red 500
+// Modern renk paleti - Görseldeki gibi
+$primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+$accent-yellow: #f6d365;
+$accent-green: #38ef7d;
+$accent-coral: #ff6b6b;
+$white: #ffffff;
+$light-gray: #f8fafc;
+$shadow: rgba(0, 0, 0, 0.1);
+$shadow-hover: rgba(0, 0, 0, 0.15);
 
+// Animasyonlar
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+:host {
+  display: block;
+  height: 100vh;
+  font-family: 'Inter', 'Roboto', sans-serif;
+  background: $primary-gradient;
+  overflow: hidden;
+}
+
+// Ana container
 .dashboard-container {
   display: flex;
   flex-direction: column;
   height: 100vh;
+  position: relative;
+  
+  // Arka plan dekoratif şekiller
+  &::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(246, 211, 101, 0.3) 0%, transparent 70%);
+    border-radius: 50%;
+    animation: float 6s ease-in-out infinite;
+    z-index: 0;
+  }
+  
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -30%;
+    left: -10%;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(56, 239, 125, 0.2) 0%, transparent 70%);
+    border-radius: 50%;
+    animation: float 8s ease-in-out infinite reverse;
+    z-index: 0;
+  }
+}
 
-  .mat-toolbar {
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    background: $primary-color;
-    color: white;
-    padding: 0 16px;
+// Toolbar güncellemesi
+.mat-toolbar {
+  position: relative;
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.95);
+  color: #333;
+  padding: 0 24px;
+  height: 72px;
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+
+  .app-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-left: 16px;
+    background: $primary-gradient;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .spacer {
+    flex: 1 1 auto;
+  }
+
+  .quick-actions {
+    margin-right: 24px;
     
-    .app-title {
-      font-size: 1.2rem;
-      font-weight: 500;
+    button {
       margin-left: 12px;
-      white-space: nowrap;
-    }
-
-    .spacer {
-      flex: 1 1 auto;
-    }
-
-    .quick-actions {
-      margin-right: 16px;
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: rgba(102, 126, 234, 0.1);
+      color: #667eea;
+      transition: all 0.3s ease;
       
-      button {
-        margin-left: 8px;
-      }
-    }
-
-    .user-menu {
-      display: flex;
-      align-items: center;
-      padding: 4px 8px;
-      border-radius: 24px;
-      cursor: pointer;
-      transition: background-color 0.2s;
-      user-select: none;
-
       &:hover {
-        background-color: rgba(255, 255, 255, 0.1);
-      }
-
-      .user-avatar {
-        width: 36px;
-        height: 36px;
-        background: linear-gradient(135deg, #ff758c, #ff7eb3);
-        color: white;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 500;
-        margin-right: 8px;
-      }
-
-      .user-name {
-        margin-right: 4px;
-        white-space: nowrap;
-        max-width: 150px;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        background: rgba(102, 126, 234, 0.2);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
       }
     }
   }
 
-  .dashboard-content {
-    flex: 1;
-    overflow: hidden;
-    
-    .sidenav-container {
-      height: 100%;
+  .user-menu {
+    display: flex;
+    align-items: center;
+    padding: 8px 16px;
+    border-radius: 24px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.3);
 
-      .mat-sidenav {
-        width: 240px;
-        border-right: none;
-        background: white;
-        box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+    &:hover {
+      background: rgba(255, 255, 255, 0.95);
+      transform: translateY(-1px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
 
-        .mat-nav-list {
-          padding: 8px;
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+      background: $primary-gradient;
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      margin-right: 12px;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
 
-          .mat-list-item {
-            border-radius: 4px;
-            margin: 4px 0;
-            color: #5f6368;
-            transition: all 0.2s;
+    .user-name {
+      margin-right: 8px;
+      font-weight: 500;
+      color: #333;
+    }
+  }
+}
 
-            &:hover {
-              background-color: #f1f3f4;
-              color: $primary-color;
+// Ana içerik alanı
+.dashboard-content {
+  flex: 1;
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+
+  .sidenav-container {
+    height: 100%;
+
+    .mat-sidenav {
+      width: 280px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(15px);
+      border-right: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
+
+      .mat-nav-list {
+        padding: 24px 16px;
+
+        .mat-list-item {
+          border-radius: 16px;
+          margin: 8px 0;
+          padding: 16px 20px;
+          height: auto;
+          color: #64748b;
+          transition: all 0.3s ease;
+          position: relative;
+          overflow: hidden;
+          
+          &::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 0;
+            height: 100%;
+            background: $primary-gradient;
+            transition: width 0.3s ease;
+            z-index: -1;
+          }
+
+          &:hover {
+            color: white;
+            transform: translateX(8px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+            
+            &::before {
+              width: 100%;
             }
+          }
 
-            &.active {
-              background-color: #e8f0fe;
-              color: $primary-color;
-              font-weight: 500;
-            }
+          &.active {
+            background: $primary-gradient;
+            color: white;
+            font-weight: 600;
+            transform: translateX(4px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+          }
 
-            .menu-icon {
-              margin-right: 16px;
-              color: inherit;
-            }
+          .menu-icon {
+            margin-right: 16px;
+            font-size: 24px;
+            width: 24px;
+            height: 24px;
+          }
 
-            .menu-text {
-              flex: 1;
-            }
+          .menu-text {
+            font-size: 16px;
+            font-weight: 500;
+          }
 
-            .badge {
-              background-color: $warn-color;
-              color: white;
-              border-radius: 10px;
-              padding: 2px 6px;
-              font-size: 0.75rem;
-              font-weight: 500;
-            }
+          .badge {
+            background: linear-gradient(45deg, #ff6b6b, #ffa726);
+            color: white;
+            border-radius: 12px;
+            padding: 4px 10px;
+            font-size: 12px;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
+            animation: pulse 2s infinite;
           }
         }
       }
+    }
 
-      .mat-sidenav-content {
-        overflow-y: auto;
-        height: calc(100vh - 64px);
-        background-color: #f5f7fb;
+    .mat-sidenav-content {
+      background: transparent;
+      overflow-y: auto;
+      height: calc(100vh - 72px);
 
-        .content-wrapper {
-          padding: 24px;
-          min-height: calc(100% - 48px);
+      .content-wrapper {
+        padding: 40px;
+        min-height: calc(100% - 80px);
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(15px);
+        border-radius: 24px;
+        margin: 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        animation: fadeInUp 0.8s ease;
+        position: relative;
+        overflow: hidden;
+        
+        // İçerik alanına dekoratif elementler
+        &::before {
+          content: '';
+          position: absolute;
+          top: -50px;
+          right: -50px;
+          width: 150px;
+          height: 150px;
+          background: radial-gradient(circle, rgba(246, 211, 101, 0.1) 0%, transparent 70%);
+          border-radius: 50%;
+          pointer-events: none;
+        }
+        
+        &::after {
+          content: '';
+          position: absolute;
+          bottom: -30px;
+          left: -30px;
+          width: 100px;
+          height: 100px;
+          background: radial-gradient(circle, rgba(56, 239, 125, 0.1) 0%, transparent 70%);
+          border-radius: 50%;
+          pointer-events: none;
         }
       }
     }
   }
 }
 
+// Responsive güncellemeleri
 @media (max-width: 768px) {
   .dashboard-container {
     .mat-toolbar {
-      padding: 0 12px;
-      
+      padding: 0 16px;
+      height: 64px;
+
       .app-title {
-        font-size: 1rem;
+        font-size: 1.25rem;
       }
 
-      .user-menu {
-        .user-name {
-          max-width: 100px;
-        }
+      .quick-actions button {
+        width: 40px;
+        height: 40px;
       }
     }
-    
+
     .dashboard-content {
       .sidenav-container {
         .mat-sidenav {
-          width: 220px !important;
+          width: 260px !important;
         }
 
         .mat-sidenav-content {
           .content-wrapper {
-            padding: 16px;
+            padding: 24px;
+            margin: 16px;
+            border-radius: 20px;
           }
         }
       }
@@ -176,11 +330,43 @@ $warn-color: #f44336;     // red 500
 @media (max-width: 480px) {
   .dashboard-container {
     .mat-toolbar {
-      .user-menu {
-        .user-name {
-          display: none;
+      .user-menu .user-name {
+        display: none;
+      }
+      
+      .quick-actions {
+        margin-right: 12px;
+      }
+    }
+
+    .dashboard-content {
+      .sidenav-container {
+        .mat-sidenav-content {
+          .content-wrapper {
+            padding: 20px;
+            margin: 12px;
+          }
         }
       }
     }
+  }
+}
+
+// Özel scrollbar
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(102, 126, 234, 0.3);
+  border-radius: 3px;
+  
+  &:hover {
+    background: rgba(102, 126, 234, 0.5);
   }
 }
