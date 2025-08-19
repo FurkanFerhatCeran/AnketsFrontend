@@ -27,23 +27,38 @@ export class SurveyEditComponent implements OnInit {
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
-      const survey = this.surveyService.getSurveyById(id);
-      if (survey) {
-        this.survey = { ...survey };
-        this.isEditing = true;
-      } else {
-        this.router.navigate(['/dashboard/surveys']);
-      }
+      this.surveyService.getSurveyById(id).subscribe({
+        next: (survey) => {
+          if (survey) {
+            this.survey = { ...survey };
+            this.isEditing = true;
+          } else {
+            this.router.navigate(['/dashboard/surveys']);
+          }
+        },
+        error: (error) => {
+          console.error('Error loading survey:', error);
+          this.router.navigate(['/dashboard/surveys']);
+        }
+      });
     } else {
-     this.router.navigate(['/dashboard/surveys']);
+      this.router.navigate(['/dashboard/surveys']);
     }
   }
 
   saveSurvey(): void {
     if (this.isEditing) {
-      this.surveyService.updateSurvey(this.survey.id, this.survey);
+      this.surveyService.updateSurvey(this.survey.id, this.survey).subscribe({
+        next: (response) => {
+          console.log('Survey updated:', response);
+          this.router.navigate(['/dashboard/surveys']);
+        },
+        error: (error) => {
+          console.error('Error updating survey:', error);
+          alert('Anket güncellenirken hata oluştu!');
+        }
+      });
     }
-    this.router.navigate(['/dashboard/surveys']);
   }
 
   cancel(): void {

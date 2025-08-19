@@ -30,12 +30,19 @@ export class SurveyTakeComponent implements OnInit {
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
-      const survey = this.surveyService.getSurveyById(id);
-      if (survey) {
-        this.survey = survey;
-      } else {
-       this.router.navigate(['/dashboard/surveys']);
-      }
+      this.surveyService.getSurveyById(id).subscribe({
+        next: (survey) => {
+          if (survey) {
+            this.survey = survey;
+          } else {
+            this.router.navigate(['/dashboard/surveys']);
+          }
+        },
+        error: (error) => {
+          console.error('Error loading survey:', error);
+          this.router.navigate(['/dashboard/surveys']);
+        }
+      });
     } else {
      this.router.navigate(['/dashboard/surveys']);
     }
@@ -80,12 +87,12 @@ export class SurveyTakeComponent implements OnInit {
     
     for (const question of this.survey.questions) {
       if (question.required) {
-        const answer = this.answers[question.id];
+        const answer = this.answers[question.id.toString()];
         
         if (answer === undefined || answer === null || answer === '') {
-          this.errors.add(question.id);
+          this.errors.add(question.id.toString());
         } else if (question.type === 'checkbox' && (!Array.isArray(answer) || answer.length === 0)) {
-          this.errors.add(question.id);
+          this.errors.add(question.id.toString());
         }
       }
     }
@@ -103,17 +110,18 @@ export class SurveyTakeComponent implements OnInit {
     this.submitting = true;
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      const response: Omit<SurveyResponse, 'id' | 'submittedAt'> = {
+      const response = {
         surveyId: this.survey.id,
         answers: { ...this.answers },
         respondentName: this.respondentName.trim() || undefined
       };
 
-      this.surveyService.submitResponse(response as SurveyResponse);
+      await this.surveyService.submitResponse(response).toPromise();
       alert('Yanıtınız başarıyla kaydedildi! Teşekkür ederiz.');
-     this.router.navigate(['/dashboard/surveys']);
+      this.router.navigate(['/dashboard/surveys']);
+    } catch (error) {
+      console.error('Error submitting response:', error);
+      alert('Yanıt gönderilirken hata oluştu!');
     } finally {
       this.submitting = false;
     }

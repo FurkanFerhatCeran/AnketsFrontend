@@ -30,9 +30,24 @@ export const API_ENDPOINTS = {
   SURVEYS: {
     GET_ALL: '/api/Surveys',
     CREATE: '/api/Surveys',
-    GET_BY_ID: (id: number) => `/api/Surveys/${id}`,
-    UPDATE: (id: number) => `/api/Surveys/${id}`,
-    DELETE: (id: number) => `/api/Surveys/${id}`
+    GET_BY_ID: (id: string) => `/api/Surveys/${id}`,
+    UPDATE: (id: string) => `/api/Surveys/${id}`,
+    DELETE: (id: string) => `/api/Surveys/${id}`
+  },
+
+  // Survey Responses endpoints  
+  SURVEY_RESPONSES: {
+    SUBMIT: '/api/SurveyResponses',
+    GET_BY_SURVEY: (surveyId: string) => `/api/SurveyResponses/survey/${surveyId}`,
+    GET_BY_ID: (id: string) => `/api/SurveyResponses/${id}`,
+    DELETE: (id: string) => `/api/SurveyResponses/${id}`,
+    GET_STATISTICS: (surveyId: string) => `/api/SurveyResponses/statistics/${surveyId}`
+  },
+
+  // Dashboard/Analytics endpoints
+  DASHBOARD: {
+    GET_STATS: '/api/Dashboard/stats',
+    GET_USER_SURVEYS: '/api/Dashboard/user-surveys'
   }
 } as const;
 
@@ -161,15 +176,45 @@ export class ApiService {
     return this.post(API_ENDPOINTS.SURVEYS.CREATE, surveyData);
   }
 
-  getSurveyById(id: number): Observable<any> {
+  getSurveyById(id: string): Observable<any> {
     return this.get(API_ENDPOINTS.SURVEYS.GET_BY_ID(id));
   }
 
-  updateSurvey(id: number, surveyData: any): Observable<any> {
+  updateSurvey(id: string, surveyData: any): Observable<any> {
     return this.put(API_ENDPOINTS.SURVEYS.UPDATE(id), surveyData);
   }
 
-  deleteSurvey(id: number): Observable<any> {
+  deleteSurvey(id: string): Observable<any> {
     return this.delete(API_ENDPOINTS.SURVEYS.DELETE(id));
+  }
+
+  // 📝 SURVEY RESPONSES METHODS
+  submitSurveyResponse(responseData: any): Observable<any> {
+    return this.post(API_ENDPOINTS.SURVEY_RESPONSES.SUBMIT, responseData);
+  }
+
+  getSurveyResponses(surveyId: string): Observable<any> {
+    return this.get(API_ENDPOINTS.SURVEY_RESPONSES.GET_BY_SURVEY(surveyId));
+  }
+
+  getSurveyResponseById(id: string): Observable<any> {
+    return this.get(API_ENDPOINTS.SURVEY_RESPONSES.GET_BY_ID(id));
+  }
+
+  deleteSurveyResponse(id: string): Observable<any> {
+    return this.delete(API_ENDPOINTS.SURVEY_RESPONSES.DELETE(id));
+  }
+
+  getSurveyStatistics(surveyId: string): Observable<any> {
+    return this.get(API_ENDPOINTS.SURVEY_RESPONSES.GET_STATISTICS(surveyId));
+  }
+
+  // 📊 DASHBOARD METHODS
+  getDashboardStats(): Observable<any> {
+    return this.get(API_ENDPOINTS.DASHBOARD.GET_STATS);
+  }
+
+  getUserSurveys(): Observable<any> {
+    return this.get(API_ENDPOINTS.DASHBOARD.GET_USER_SURVEYS);
   }
 }

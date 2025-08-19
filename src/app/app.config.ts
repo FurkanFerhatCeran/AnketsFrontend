@@ -12,6 +12,8 @@ import { provideRouter } from '@angular/router';
 import { routes } from './app.routes'; 
 
 import { authInterceptor } from './core/interceptors/auth.interceptor'; // authInterceptor'ı import et
+import { HTTP_INTERCEPTORS } from '@angular/common/http';
+import { ErrorInterceptor } from './interceptors/error.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -21,6 +23,12 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(
       withFetch(), // HttpClient'ı fetch API desteğiyle sağlar
       withInterceptors([authInterceptor]) // HTTP isteklerine authInterceptor'ı ekler
-    )
+    ),
+    // Error Interceptor'ı ekleyin:
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: ErrorInterceptor,
+      multi: true
+    }
   ]
 };

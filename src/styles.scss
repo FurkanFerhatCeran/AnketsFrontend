@@ -160,7 +160,7 @@ app-root {
     font-size: 2rem;
     font-weight: 700;
     margin: 0 0 8px 0;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); // Mor-mavi gradient
+    background:white;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -431,6 +431,7 @@ select.form-control {
 }
 
 .rating-item span {
+  background-color: white;
   margin-top: 5px;
   font-size: 14px;
 }

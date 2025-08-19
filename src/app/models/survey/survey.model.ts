@@ -1,7 +1,7 @@
 // src/app/models/survey/survey.model.ts
 
 export interface Question {
-    id: string;
+    id: string; // number → string'e değiştir
     type: 'text' | 'textarea' | 'radio' | 'checkbox' | 'rating' | 'select';
     title: string;
     description?: string;
@@ -12,7 +12,7 @@ export interface Question {
 }
 
 export interface Survey {
-    id: string;
+    id: string; // number → string'e değiştir
     title: string;
     description: string;
     questions: Question[];
@@ -21,8 +21,8 @@ export interface Survey {
 }
 
 export interface SurveyResponse {
-    id: string;
-    surveyId: string;
+    id: string; // number → string'e değiştir
+    surveyId: string; // number → string'e değiştir
     answers: { [questionId: string]: any };
     submittedAt: Date;
     respondentName?: string;
@@ -33,4 +33,18 @@ export interface SurveyResult {
     responses: SurveyResponse[];
     totalResponses: number;
     questionStats: { [questionId: string]: any };
+}
+
+// Backend Response DTOs
+export interface CreateSurveyResponse {
+    id: number;
+    title: string;
+    message?: string;
+}
+
+export interface SurveyStatsResponse {
+    survey: Survey;
+    totalResponses: number;
+    questionStats: { [questionId: string]: any };
+    responseRate?: number;
 }

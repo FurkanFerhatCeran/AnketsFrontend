@@ -253,7 +253,7 @@ $shadow-hover: rgba(0, 0, 0, 0.15);
       .content-wrapper {
         padding: 40px;
         min-height: calc(100% - 80px);
-        background: rgba(255, 255, 255, 0.95);
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #667eea 100%);
         backdrop-filter: blur(15px);
         border-radius: 24px;
         margin: 20px;

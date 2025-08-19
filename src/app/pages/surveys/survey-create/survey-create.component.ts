@@ -16,7 +16,7 @@ import { Question, Survey } from '../../../models/survey/survey.model';
 export class SurveyCreateComponent {
   //... diğer kodlar aynı kalacak
   survey: Survey = {
-    id: '',
+    id: '', // String boş değer
     title: '',
     description: '',
     questions: [],
@@ -27,8 +27,39 @@ export class SurveyCreateComponent {
   constructor(private surveyService: SurveyService, private router: Router) {}
 
   saveSurvey(): void {
-    this.surveyService.createSurvey(this.survey);
-    this.router.navigate(['/dashboard/surveys']);
+    if (!this.survey.title.trim()) {
+      alert('Anket başlığı zorunludur!');
+      return;
+    }
+
+    // Loading state ekleyin
+    const createBtn = document.querySelector('.btn-primary') as HTMLButtonElement;
+    if (createBtn) {
+      createBtn.disabled = true;
+      createBtn.textContent = 'Kaydediliyor...';
+    }
+
+    this.surveyService.createSurvey({
+      title: this.survey.title,
+      description: this.survey.description,
+      questions: this.survey.questions,
+      isActive: this.survey.isActive
+    }).subscribe({
+      next: (response) => {
+        console.log('Survey created:', response);
+        this.router.navigate(['/dashboard/surveys']);
+      },
+      error: (error) => {
+        console.error('Error creating survey:', error);
+        alert('Anket kaydedilirken hata oluştu!');
+        
+        // Re-enable button
+        if (createBtn) {
+          createBtn.disabled = false;
+          createBtn.textContent = 'Anketi Kaydet';
+        }
+      }
+    });
   }
 
   cancel(): void {
@@ -37,7 +68,7 @@ export class SurveyCreateComponent {
 
   addQuestion(): void {
     const newQuestion: Question = {
-      id: this.generateId(),
+      id: this.generateId(), // String ID oluştur
       type: 'text',
       title: '',
       required: false,

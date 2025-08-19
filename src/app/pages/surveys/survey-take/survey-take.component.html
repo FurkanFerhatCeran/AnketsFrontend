@@ -17,7 +17,7 @@
       <div
         *ngFor="let question of survey.questions; let i = index"
         class="question-card"
-        [class.has-error]="hasError(question.id)">
+        [class.has-error]="hasError(question.id.toString())">
         
         <div class="question-header">
           <h3 class="question-title">
@@ -33,16 +33,16 @@
           <input
             *ngIf="question.type === 'text'"
             type="text"
-            [(ngModel)]="answers[question.id]"
-            [name]="question.id"
+            [(ngModel)]="answers[question.id.toString()]"
+            [name]="question.id.toString()"
             [required]="question.required"
             class="form-control"
             placeholder="Cevabınızı yazın...">
 
           <textarea
             *ngIf="question.type === 'textarea'"
-            [(ngModel)]="answers[question.id]"
-            [name]="question.id"
+            [(ngModel)]="answers[question.id.toString()]"
+            [name]="question.id.toString()"
             [required]="question.required"
             class="form-control"
             rows="4"
@@ -54,8 +54,8 @@
               class="radio-option">
               <input
                 type="radio"
-                [(ngModel)]="answers[question.id]"
-                [name]="question.id"
+                [(ngModel)]="answers[question.id.toString()]"
+                [name]="question.id.toString()"
                 [value]="option"
                 [required]="question.required">
               <span class="radio-custom"></span>
@@ -69,9 +69,9 @@
               class="checkbox-option">
               <input
                 type="checkbox"
-                [checked]="isChecked(question.id, option)"
-                (change)="onCheckboxChange(question.id, option, $event)"
-                [name]="question.id + '_' + optIndex">
+                [checked]="isChecked(question.id.toString(), option)"
+                (change)="onCheckboxChange(question.id.toString(), option, $event)"
+                [name]="question.id.toString() + '_' + optIndex">
               <span class="checkbox-custom"></span>
               {{ option }}
             </label>
@@ -79,8 +79,8 @@
 
           <select
             *ngIf="question.type === 'select'"
-            [(ngModel)]="answers[question.id]"
-            [name]="question.id"
+            [(ngModel)]="answers[question.id.toString()]"
+            [name]="question.id.toString()"
             [required]="question.required"
             class="form-control">
             <option value="">Seçiniz...</option>
@@ -95,8 +95,8 @@
                 *ngFor="let rating of getRatingRange(question); let rIndex = index"
                 type="button"
                 class="rating-button"
-                [class.selected]="answers[question.id] === rating"
-                (click)="selectRating(question.id, rating)">
+                [class.selected]="answers[question.id.toString()] === rating"
+                (click)="selectRating(question.id.toString(), rating)">
                 {{ rating }}
               </button>
             </div>
@@ -107,7 +107,7 @@
           </div>
         </div>
 
-        <div class="error-message" *ngIf="hasError(question.id)">
+        <div class="error-message" *ngIf="hasError(question.id.toString())">
           Bu soru zorunludur
         </div>
       </div>
