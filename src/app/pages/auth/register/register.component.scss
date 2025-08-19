@@ -1,64 +1,493 @@
-.register-container {
-    max-width: 400px;
-    margin: 0 auto;
-    padding: 20px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    background-color: #f9f9f9;
+/* src/app/pages/auth/register/register.component.scss */
 
-    h2 {
-        text-align: center;
-        margin-bottom: 20px;
+// Dashboard ile aynı renk paleti
+$primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+$accent-yellow: #f6d365;
+$accent-green: #38ef7d;
+$accent-coral: #ff6b6b;
+$white: #ffffff;
+$light-gray: #f8fafc;
+$text-primary: #1e293b;
+$text-secondary: #64748b;
+$border-color: #e2e8f0;
+$error-color: #ef4444;
+$success-color: #10b981;
+
+// Animasyonlar
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-10px) rotate(5deg); }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-8px); }
+  20%, 40%, 60%, 80% { transform: translateX(8px); }
+}
+
+// Ana sayfa container
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: $primary-gradient;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+  font-family: 'Inter', 'Roboto', sans-serif;
+
+  // Arka plan dekoratif elementleri
+  .bg-decoration {
+    position: absolute;
+    border-radius: 50%;
+    opacity: 0.1;
+    animation: float 8s ease-in-out infinite;
+
+    &.bg-decoration-1 {
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, $accent-yellow, transparent);
+      top: -150px;
+      right: -150px;
+      animation-delay: 0s;
     }
 
-    .form-group {
-        margin-bottom: 15px;
-
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-
-        input {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
+    &.bg-decoration-2 {
+      width: 200px;
+      height: 200px;
+      background: radial-gradient(circle, $accent-green, transparent);
+      bottom: -100px;
+      left: -100px;
+      animation-delay: 2s;
     }
 
-    button {
+    &.bg-decoration-3 {
+      width: 150px;
+      height: 150px;
+      background: radial-gradient(circle, $accent-coral, transparent);
+      top: 50%;
+      left: -75px;
+      animation-delay: 4s;
+    }
+  }
+}
+
+// Login container (register için de kullanılıyor)
+.login-container {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 24px;
+  padding: 48px;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  animation: fadeInUp 0.8s ease;
+  position: relative;
+
+  // Header kısmı
+  .login-header {
+    text-align: center;
+    margin-bottom: 40px;
+
+    .app-logo {
+      display: inline-flex;
+      margin-bottom: 16px;
+
+      .logo-icon {
+        width: 64px;
+        height: 64px;
+        background: $primary-gradient;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+        
+        span {
+          color: white;
+          font-size: 24px;
+          font-weight: 700;
+        }
+      }
+    }
+
+    .app-title {
+      font-size: 2rem;
+      font-weight: 700;
+      margin: 0 0 8px 0;
+      background: $primary-gradient;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .login-subtitle {
+      color: $text-secondary;
+      font-size: 16px;
+      margin: 0;
+    }
+  }
+}
+
+// Form stilleri
+.login-form {
+  .form-group {
+    margin-bottom: 24px;
+
+    .form-label {
+      display: flex;
+      align-items: center;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: $text-primary;
+      font-size: 14px;
+
+      .required-star {
+        color: $error-color;
+        margin-left: 4px;
+      }
+    }
+
+    .input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+
+      .input-icon {
+        position: absolute;
+        left: 16px;
+        color: $text-secondary;
+        z-index: 1;
+        transition: color 0.3s ease;
+      }
+
+      .form-input {
         width: 100%;
-        padding: 10px;
-        background-color: #007bff;
-        color: white;
+        padding: 16px 16px 16px 48px;
+        border: 2px solid $border-color;
+        border-radius: 12px;
+        font-size: 16px;
+        background: $white;
+        transition: all 0.3s ease;
+        color: $text-primary;
+
+        &::placeholder {
+          color: #94a3b8;
+        }
+
+        &:focus {
+          outline: none;
+          border-color: #667eea;
+          box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        &:focus + .password-toggle,
+        &:focus ~ .input-icon {
+          color: #667eea;
+        }
+
+        &.error {
+          border-color: $error-color;
+          box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
+        }
+      }
+
+      .password-toggle {
+        position: absolute;
+        right: 16px;
+        background: none;
         border: none;
-        border-radius: 4px;
         cursor: pointer;
+        color: $text-secondary;
+        padding: 4px;
+        border-radius: 6px;
+        transition: all 0.2s ease;
 
-        &:disabled {
-            background-color: #cccccc;
-            cursor: not-allowed;
+        &:hover {
+          background: rgba(102, 126, 234, 0.1);
+          color: #667eea;
         }
+      }
     }
 
-    .error-message {
-        color: red;
-        margin-top: 10px;
+    .error-text {
+      color: $error-color;
+      font-size: 14px;
+      margin-top: 6px;
+      display: flex;
+      align-items: center;
+    }
+  }
+
+  .form-options {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 32px;
+
+    .forgot-password {
+      color: #667eea;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: color 0.2s ease;
+
+      &:hover {
+        color: #5a67d8;
+        text-decoration: underline;
+      }
+    }
+  }
+
+  .error-message {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    color: $error-color;
+    font-size: 14px;
+    animation: fadeInUp 0.3s ease;
+
+    .error-icon {
+      margin-right: 12px;
+      flex-shrink: 0;
+    }
+  }
+
+  .login-button {
+    width: 100%;
+    padding: 16px 24px;
+    background: $primary-gradient;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+
+    .button-text {
+      display: block;
     }
 
-    p {
-        text-align: center;
-        margin-top: 15px;
+    .loading-spinner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
 
-        a {
-            color: #007bff;
-            text-decoration: none;
+      .spinner {
+        width: 20px;
+        height: 20px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-top: 2px solid white;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-right: 12px;
+      }
+    }
 
-            &:hover {
-                text-decoration: underline;
-            }
+    &:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 40px rgba(102, 126, 234, 0.4);
+    }
+
+    &:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    &:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    &.loading {
+      pointer-events: none;
+    }
+  }
+}
+
+// Footer
+.login-footer {
+  margin-top: 32px;
+  text-align: center;
+
+  .register-text {
+    color: $text-secondary;
+    font-size: 15px;
+    margin: 0;
+
+    .register-link {
+      color: #667eea;
+      text-decoration: none;
+      font-weight: 600;
+      transition: color 0.2s ease;
+
+      &:hover {
+        color: #5a67d8;
+        text-decoration: underline;
+      }
+    }
+  }
+}
+
+// Sosyal login
+.social-login {
+  margin-top: 32px;
+
+  .divider {
+    position: relative;
+    text-align: center;
+    margin-bottom: 24px;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: $border-color;
+    }
+
+    .divider-text {
+      background: rgba(255, 255, 255, 0.95);
+      padding: 0 16px;
+      color: $text-secondary;
+      font-size: 14px;
+      position: relative;
+    }
+  }
+
+  .social-buttons {
+    .social-button {
+      width: 100%;
+      padding: 14px 20px;
+      border: 2px solid $border-color;
+      border-radius: 12px;
+      background: $white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: 500;
+      color: $text-primary;
+
+      svg {
+        margin-right: 12px;
+      }
+
+      &:hover {
+        border-color: #667eea;
+        background: rgba(102, 126, 234, 0.02);
+        transform: translateY(-1px);
+      }
+
+      &.google:hover {
+        box-shadow: 0 4px 16px rgba(66, 133, 244, 0.2);
+      }
+    }
+  }
+}
+
+// Responsive design
+@media (max-width: 640px) {
+  .login-page {
+    padding: 16px;
+  }
+
+  .login-container {
+    padding: 32px 24px;
+    border-radius: 20px;
+
+    .login-header {
+      margin-bottom: 32px;
+
+      .app-logo .logo-icon {
+        width: 56px;
+        height: 56px;
+
+        span {
+          font-size: 20px;
         }
+      }
+
+      .app-title {
+        font-size: 1.75rem;
+      }
     }
+  }
+
+  .login-form {
+    .form-group {
+      margin-bottom: 20px;
+
+      .input-wrapper .form-input {
+        padding: 14px 14px 14px 44px;
+        font-size: 16px; // iOS zoom önleme
+      }
+    }
+
+    .login-button {
+      padding: 14px 20px;
+      font-size: 16px;
+    }
+  }
+
+  .login-footer,
+  .social-login {
+    margin-top: 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  .login-container {
+    padding: 28px 20px;
+  }
+
+  .bg-decoration {
+    &.bg-decoration-1 {
+      width: 200px;
+      height: 200px;
+    }
+
+    &.bg-decoration-2 {
+      width: 150px;
+      height: 150px;
+    }
+
+    &.bg-decoration-3 {
+      width: 100px;
+      height: 100px;
+    }
+  }
 }

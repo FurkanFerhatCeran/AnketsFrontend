@@ -1,7 +1,76 @@
-<!-- Survey List Sayfası HTML Template -->
-<!-- TODO: Sayfa başlığı ve yeni anket oluştur butonu -->
-<!-- TODO: Arama kutusu ve filtre seçenekleri -->
-<!-- TODO: Anket listesi tablosu (Başlık, Oluşturma Tarihi, Durum, Yanıt Sayısı) -->
-<!-- TODO: Her anket için işlem butonları (Düzenle, Sil, Görüntüle, Aktif/Pasif) -->
-<!-- TODO: Pagination kontrolleri -->
-<!-- TODO: Boş liste durumu için mesaj -->
+<div class="survey-list-view">
+    <div class="page-header">
+        <h2>Anketlerim</h2>
+        <p class="subtitle">Anketlerinizi oluşturun, yönetin ve sonuçları görüntüleyin</p>
+    </div>
+
+    <div class="surveys-grid" *ngIf="surveys.length > 0; else emptySurveys">
+        <div
+            *ngFor="let survey of surveys"
+            class="survey-card"
+            [class.inactive]="!survey.isActive">
+            
+            <div class="card-header">
+                <div class="survey-info">
+                    <h3>{{ survey.title }}</h3>
+                    <p class="survey-description">{{ survey.description }}</p>
+                    <div class="survey-meta">
+                        <span class="question-count">{{ survey.questions.length }} soru</span>
+                        <span class="created-date">{{ formatDate(survey.createdAt) }}</span>
+                        <span class="status" [class.active]="survey.isActive">
+                            {{ survey.isActive ? 'Aktif' : 'Pasif' }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-actions">
+                <button class="btn-action view" (click)="navigateToView(survey.id)" title="Anketi Görüntüle">
+                    👁️
+                </button>
+                <button class="btn-action edit" (click)="navigateToEdit(survey.id)" title="Düzenle">
+                    ✏️
+                </button>
+                <button class="btn-action results" (click)="navigateToResults(survey.id)" title="Sonuçları Gör">
+                    📊
+                </button>
+                <button
+                    class="btn-action duplicate"
+                    (click)="duplicateSurvey(survey)"
+                    title="Kopyala">
+                    📄
+                </button>
+                <button
+                    class="btn-action delete"
+                    (click)="deleteSurvey(survey)"
+                    title="Sil">
+                    🗑️
+                </button>
+            </div>
+
+            <div class="response-stats" *ngIf="getResponseCount(survey.id) > 0">
+                <div class="stat-item">
+                    <span class="stat-number">{{ getResponseCount(survey.id) }}</span>
+                    <span class="stat-label">Yanıt</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <ng-template #emptySurveys>
+        <div class="empty-state">
+            <div class="empty-icon">📋</div>
+            <h3>Henüz anket oluşturmadınız</h3>
+            <p>İlk anketinizi oluşturmak için "Yeni Anket" butonuna tıklayın.</p>
+            <button class="btn-primary large" (click)="navigateToCreate()">
+                <span class="icon">+</span>
+                İlk Anketimi Oluştur
+            </button>
+        </div>
+    </ng-template>
+
+    <div class="toast success" *ngIf="showSuccessMessage">
+        <span class="toast-icon">✅</span>
+        {{ successMessage }}
+    </div>
+</div>

@@ -1,9 +1,74 @@
-<!-- Survey Create Sayfası HTML Template -->
-<!-- TODO: Anket başlığı ve açıklama form alanları -->
-<!-- TODO: Soru ekleme butonu -->
-<!-- TODO: Mevcut soruların listesi -->
-<!-- TODO: Her soru için tip seçimi dropdown'ı -->
-<!-- TODO: Çoktan seçmeli sorular için seçenek ekleme alanı -->
-<!-- TODO: Soruları sürükle-bırak ile sıralama -->
-<!-- TODO: Kaydet ve İptal butonları -->
-<!-- TODO: Form validation hata mesajları -->
+<!-- src/app/pages/surveys/survey-create/survey-create.component.html -->
+<div class="survey-creator">
+  <div class="creator-header">
+    <h2>Yeni Anket Oluştur</h2>
+  </div>
+
+  <form (ngSubmit)="saveSurvey()">
+    <div class="form-group">
+      <label for="title">Anket Başlığı</label>
+      <input id="title" type="text" [(ngModel)]="survey.title" name="title" required class="form-control">
+    </div>
+    <div class="form-group">
+      <label for="description">Açıklama</label>
+      <textarea id="description" [(ngModel)]="survey.description" name="description" class="form-control" rows="3"></textarea>
+    </div>
+
+    <h3>Sorular</h3>
+    <div class="questions-container">
+      <div *ngFor="let question of survey.questions; let i = index" class="question-card">
+        <div class="card-header">
+          <h4>Soru {{ i + 1 }}</h4>
+          <button type="button" class="btn-delete" (click)="removeQuestion(i)">
+            &times;
+          </button>
+        </div>
+
+        <div class="form-group">
+          <label>Soru Metni</label>
+          <input type="text" [(ngModel)]="question.title" name="question-title-{{i}}" required class="form-control">
+        </div>
+
+        <div class="form-group">
+          <label>Soru Tipi</label>
+          <select [(ngModel)]="question.type" name="question-type-{{i}}" class="form-control">
+            <option value="text">Metin Girişi (Tek Satır)</option>
+            <option value="textarea">Metin Alanı (Çok Satır)</option>
+            <option value="radio">Çoktan Seçmeli (Tek Seçim)</option>
+            <option value="checkbox">Çoktan Seçmeli (Çoklu Seçim)</option>
+            <option value="rating">Puanlama</option>
+          </select>
+        </div>
+
+        <div class="form-group" *ngIf="question.type === 'radio' || question.type === 'checkbox'">
+          <label>Seçenekler (Virgülle ayırın)</label>
+          <!-- Güncellenen kısım: `ngModel` ile `(input)`'u ayırdık -->
+          <input type="text"
+                 [ngModel]="getOptionsString(question)"
+                 (input)="onOptionsChange(question, $event)"
+                 name="question-options-{{i}}"
+                 class="form-control">
+        </div>
+        
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" [(ngModel)]="question.required" name="question-required-{{i}}">
+            <span class="checkbox-custom"></span> Zorunlu Soru
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="action-buttons">
+      <button type="button" class="btn-secondary" (click)="addQuestion()">
+        <span class="icon">+</span> Yeni Soru Ekle
+      </button>
+      <button type="submit" class="btn-primary" [disabled]="!survey.title">
+        Anketi Kaydet
+      </button>
+      <button type="button" class="btn-secondary" (click)="cancel()">
+        İptal
+      </button>
+    </div>
+  </form>
+</div>

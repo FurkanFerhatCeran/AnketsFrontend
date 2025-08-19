@@ -1,7 +1,142 @@
-<!-- Survey Take Sayfası HTML Template -->
-<!-- TODO: Anket başlığı ve açıklaması -->
-<!-- TODO: Soruları sırayla göster -->
-<!-- TODO: Her soru tipi için uygun input alanları -->
-<!-- TODO: İleri/Geri navigasyon butonları -->
-<!-- TODO: Gönder butonu (son soruda) -->
-<!-- TODO: İlerleme çubuğu -->
+<div class="survey-viewer">
+  <div class="survey-header">
+    <h1>{{ survey.title }}</h1>
+    <p *ngIf="survey.description" class="survey-description">
+      {{ survey.description }}
+    </p>
+    <div class="survey-meta">
+      <span class="question-count">{{ survey.questions.length }} soru</span>
+      <span class="required-note" *ngIf="hasRequiredQuestions()">
+        * ile işaretli sorular zorunludur
+      </span>
+    </div>
+  </div>
+
+  <form class="survey-form" (ngSubmit)="onSubmit()" #surveyForm="ngForm">
+    <div class="questions-container">
+      <div
+        *ngFor="let question of survey.questions; let i = index"
+        class="question-card"
+        [class.has-error]="hasError(question.id)">
+        
+        <div class="question-header">
+          <h3 class="question-title">
+            {{ i + 1 }}. {{ question.title }}
+            <span class="required-mark" *ngIf="question.required">*</span>
+          </h3>
+          <p *ngIf="question.description" class="question-description">
+            {{ question.description }}
+          </p>
+        </div>
+
+        <div class="question-input">
+          <input
+            *ngIf="question.type === 'text'"
+            type="text"
+            [(ngModel)]="answers[question.id]"
+            [name]="question.id"
+            [required]="question.required"
+            class="form-control"
+            placeholder="Cevabınızı yazın...">
+
+          <textarea
+            *ngIf="question.type === 'textarea'"
+            [(ngModel)]="answers[question.id]"
+            [name]="question.id"
+            [required]="question.required"
+            class="form-control"
+            rows="4"
+            placeholder="Cevabınızı yazın..."></textarea>
+
+          <div *ngIf="question.type === 'radio'" class="radio-group">
+            <label
+              *ngFor="let option of question.options; let optIndex = index"
+              class="radio-option">
+              <input
+                type="radio"
+                [(ngModel)]="answers[question.id]"
+                [name]="question.id"
+                [value]="option"
+                [required]="question.required">
+              <span class="radio-custom"></span>
+              {{ option }}
+            </label>
+          </div>
+
+          <div *ngIf="question.type === 'checkbox'" class="checkbox-group">
+            <label
+              *ngFor="let option of question.options; let optIndex = index"
+              class="checkbox-option">
+              <input
+                type="checkbox"
+                [checked]="isChecked(question.id, option)"
+                (change)="onCheckboxChange(question.id, option, $event)"
+                [name]="question.id + '_' + optIndex">
+              <span class="checkbox-custom"></span>
+              {{ option }}
+            </label>
+          </div>
+
+          <select
+            *ngIf="question.type === 'select'"
+            [(ngModel)]="answers[question.id]"
+            [name]="question.id"
+            [required]="question.required"
+            class="form-control">
+            <option value="">Seçiniz...</option>
+            <option *ngFor="let option of question.options" [value]="option">
+              {{ option }}
+            </option>
+          </select>
+
+          <div *ngIf="question.type === 'rating'" class="rating-group">
+            <div class="rating-scale">
+              <button
+                *ngFor="let rating of getRatingRange(question); let rIndex = index"
+                type="button"
+                class="rating-button"
+                [class.selected]="answers[question.id] === rating"
+                (click)="selectRating(question.id, rating)">
+                {{ rating }}
+              </button>
+            </div>
+            <div class="rating-labels" *ngIf="question.min && question.max">
+              <span>{{ question.min }} (Düşük)</span>
+              <span>{{ question.max }} (Yüksek)</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="error-message" *ngIf="hasError(question.id)">
+          Bu soru zorunludur
+        </div>
+      </div>
+    </div>
+
+    <div class="form-footer">
+      <div class="respondent-info">
+        <label>
+          <input
+            type="text"
+            [(ngModel)]="respondentName"
+            name="respondentName"
+            placeholder="Adınız (opsiyonel)"
+            class="form-control">
+        </label>
+      </div>
+      
+      <div class="submit-section">
+        <button class="btn-secondary" type="button" (click)="onBack()">
+          Geri Dön
+        </button>
+        <button
+          class="btn-primary"
+          type="submit"
+          [disabled]="submitting">
+          <span *ngIf="submitting" class="loading-spinner"></span>
+          {{ submitting ? 'Gönderiliyor...' : 'Anketi Gönder' }}
+        </button>
+      </div>
+    </div>
+  </form>
+</div>
