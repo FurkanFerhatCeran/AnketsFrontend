@@ -11,7 +11,21 @@ import { trigger, transition, style, animate, query, stagger } from '@angular/an
   standalone: true,
   imports: [CommonModule],
   templateUrl: './survey-list.component.html',
-  styleUrls: ['./survey-list.component.scss'] // Uzantı .scss olarak değiştirildi
+  styleUrls: ['./survey-list.component.scss'],
+  animations: [
+    trigger('slideIn', [
+      transition(':enter', [
+        style({ 
+          opacity: 0, 
+          transform: 'translateY(30px)' 
+        }),
+        animate('0.4s ease-out', style({ 
+          opacity: 1, 
+          transform: 'translateY(0)' 
+        }))
+      ])
+    ])
+  ]
 })
 export class SurveyListComponent implements OnInit {
   //... diğer kodlar aynı kalacak

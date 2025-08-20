@@ -104,59 +104,54 @@
         [mode]="(isHandset$ | async) ? 'over' : 'side'"
         [fixedInViewport]="isHandset$ | async"
         [fixedTopGap]="72"
-        class="modern-sidenav">
+        class="clean-sidenav">
         
-        <mat-nav-list class="navigation-list">
-          <!-- Ana menü öğeleri -->
+        <!-- Dashboard Header -->
+        <div class="sidebar-header">
+          <div class="header-icon">
+            <mat-icon>dashboard</mat-icon>
+          </div>
+          <span class="header-title">Dashboard</span>
+        </div>
+        
+        <mat-nav-list class="clean-nav-list">
+          <!-- Ana menü öğeleri - TEMİZ TASARIM -->
           <a mat-list-item
              *ngFor="let item of menuItems"
              [routerLink]="item.route"
              routerLinkActive="active"
              [routerLinkActiveOptions]="{exact: item.exact || false}"
-             class="nav-item"
-             [matTooltip]="item.name"
-             matTooltipPosition="right">
+             class="clean-nav-item">
+             
+            <mat-icon class="item-icon">{{ item.icon }}</mat-icon>
             
-            <mat-icon class="menu-icon">{{ item.icon }}</mat-icon>
-            <span class="menu-text">{{ item.name }}</span>
-            
-            <!-- Badge gösterimi -->
-            <span *ngIf="item.badge && item.badge > 0" class="badge">
-              {{ item.badge }}
-            </span>
-            
-            <!-- Aktif öğe için ok işareti -->
-            <mat-icon *ngIf="router.url === item.route" class="active-indicator">
-              chevron_right
-            </mat-icon>
-          </a>
-          
-          <!-- Alt menü bölümü -->
-          <mat-divider class="menu-divider"></mat-divider>
-          
-          <h3 class="menu-section-title">Diğer</h3>
-          
-          <a mat-list-item 
-             routerLink="/help" 
-             routerLinkActive="active" 
-             class="nav-item">
-            <mat-icon class="menu-icon">help_outline</mat-icon>
-            <span class="menu-text">Yardım</span>
-          </a>
-          
-          <a mat-list-item 
-             routerLink="/feedback" 
-             routerLinkActive="active" 
-             class="nav-item">
-            <mat-icon class="menu-icon">feedback</mat-icon>
-            <span class="menu-text">Geri Bildirim</span>
+            <div class="item-content">
+              <span class="item-title">{{ item.name }}</span>
+              <span class="item-subtitle">
+                <ng-container [ngSwitch]="item.name">
+                  <span *ngSwitchCase="'Anasayfa'">Genel bakış</span>
+                  <span *ngSwitchCase="'Anketlerim'">Anket yönetimi</span>
+                  <span *ngSwitchCase="'Yeni Anket'">Anket oluştur</span>
+                  <span *ngSwitchCase="'Analizler'">Detaylı raporlar</span>
+                  <span *ngSwitchCase="'Profil'">Hesap ayarları</span>
+                  <span *ngSwitchCase="'Ayarlar'">Uygulama ayarları</span>
+                  <span *ngSwitchCase="'Yardım'">Destek merkezi</span>
+                  <span *ngSwitchDefault></span>
+                </ng-container>
+              </span>
+            </div>
           </a>
         </mat-nav-list>
         
-        <!-- Sidebar Alt Kısım -->
-        <div class="sidebar-footer">
-          <div class="app-version">
-            <mat-icon>info_outline</mat-icon>
+        <!-- Sidebar Footer - TEMİZ KULLANICI PROFIL -->
+        <div class="clean-sidebar-footer">
+          <div class="user-info">
+            <div class="user-title">Kullanıcı</div>
+            <div class="user-subtitle">{{ getUserDisplayName() }}</div>
+          </div>
+          
+          <div class="version-info">
+            <mat-icon>info</mat-icon>
             <span>v2.1.0</span>
           </div>
         </div>
@@ -165,16 +160,6 @@
       <!-- Ana İçerik -->
       <mat-sidenav-content class="main-content">
         <div class="content-wrapper">
-          <!-- Sayfa başlığı ve breadcrumb -->
-          <div class="page-header" *ngIf="getCurrentPageTitle()">
-            <h1 class="page-title">{{ getCurrentPageTitle() }}</h1>
-            <div class="page-breadcrumb">
-              <span></span>
-              <mat-icon>chevron_right</mat-icon>
-              <span>{{ getCurrentPageTitle() }}</span>
-            </div>
-          </div>
-          
           <!-- Router outlet - İçerik buraya yüklenir -->
           <div class="page-content">
             <router-outlet></router-outlet>

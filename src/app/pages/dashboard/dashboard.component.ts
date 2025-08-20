@@ -269,4 +269,30 @@ export class DashboardComponent implements OnInit, OnDestroy {
         console.log(`❓ Bilinmeyen action: ${action}`);
     }
   }
+
+  // Menu helper methods
+  getMenuType(item: any): string {
+    const iconMap: { [key: string]: string } = {
+      'home': 'home',
+      'assignment': 'surveys', 
+      'add_circle': 'create',
+      'analytics': 'analytics',
+      'person': 'profile',
+      'settings': 'settings',
+      'help_outline': 'help'
+    };
+    return iconMap[item.icon] || 'default';
+  }
+
+  getMenuDescription(item: any): string {
+    const descriptions: { [key: string]: string } = {
+      'Anasayfa': 'Genel bakış',
+      'Anketlerim': 'Tüm anketleriniz',
+      'Yeni Anket': 'Hızlı oluştur',
+      'Analizler': 'Detaylı raporlar',
+      'Profil': 'Hesap ayarları',
+      'Ayarlar': 'Uygulama tercihleri'
+    };
+    return descriptions[item.name] || '';
+  }
 }
