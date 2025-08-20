@@ -147,7 +147,7 @@
   }
 }
 
-// Stats Bar - BEYAZ ARKA PLAN VE SİYAH YAZI
+// Stats Bar - RENKLİ KARTLAR
 .stats-bar {
   display: flex;
   gap: 1rem;
@@ -158,32 +158,79 @@
   
   .stat-item {
     flex: 1;
-    background: rgba(255, 255, 255, 0.95); // Beyaz arka plan
     backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    border: none;
     border-radius: 16px;
     padding: 1.5rem;
-    text-align: center;
+    text-align: center; // Orta hizalama
     transition: all 0.3s ease;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    position: relative;
+    
+    // Default (Toplam Anket - Mavi)
+    background: linear-gradient(135deg, #4285f4, #1976d2);
+    
+    // Aktif Anket - Yeşil
+    &:nth-child(2) {
+      background: linear-gradient(135deg, #34a853, #0f9d58);
+    }
+    
+    // Toplam Yanıt - Turuncu
+    &:nth-child(3) {
+      background: linear-gradient(135deg, #dfb535, #e89a35);
+    }
     
     &:hover {
       transform: translateY(-2px);
-      background: rgba(255, 255, 255, 1); // Hover'da tam beyaz
       box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
     }
     
+    // İkon ve sayı dikey olarak ortalanmış
+    .stat-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      
+      .stat-icon {
+        font-size: 2rem;
+        color: rgba(255, 255, 255, 0.9);
+      }
+      
+      .stat-info {
+        text-align: center;
+        
+        .stat-number {
+          display: block;
+          font-size: 2rem;
+          font-weight: 700;
+          color: white;
+          margin: 0 0 0.25rem 0;
+          line-height: 1;
+        }
+        
+        .stat-label {
+          font-size: 0.9rem;
+          color: rgba(255, 255, 255, 0.8);
+          font-weight: 500;
+          margin: 0;
+        }
+      }
+    }
+    
+    // Eğer eski yapı kullanılıyorsa (yedek)
     .stat-number {
       display: block;
       font-size: 2rem;
       font-weight: 700;
-      color: #1a202c; // Koyu siyah sayılar
+      color: white;
       margin-bottom: 0.25rem;
     }
     
     .stat-label {
       font-size: 0.9rem;
-      color: #4a5568; // Koyu gri etiketler
+      color: rgba(255, 255, 255, 0.8);
       font-weight: 500;
     }
   }
