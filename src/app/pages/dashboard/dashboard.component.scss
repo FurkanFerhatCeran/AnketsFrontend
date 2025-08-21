@@ -218,6 +218,145 @@ $shadow-hover: rgba(0, 0, 0, 0.15);
   }
 }
 
+// Kullanıcı menüsü - Daha görünür tasarım
+.user-menu {
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+  border-radius: 24px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.2) !important; // Daha belirgin arka plan
+  border: 2px solid rgba(255, 255, 255, 0.4); // Daha belirgin border
+  backdrop-filter: blur(10px);
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.3) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.6);
+  }
+
+  .user-avatar {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #ffffff, #f8fafc) !important; // Beyaz gradyan
+    color: #667eea !important; // Mor yazı
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700; // Daha kalın yazı
+    margin-right: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+  }
+
+  .user-name {
+    margin-right: 8px;
+    font-weight: 600; // Daha kalın yazı
+    color: #ffffff !important; // Beyaz yazı
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2); // Hafif gölge
+    font-size: 0.95rem;
+  }
+
+  .dropdown-icon {
+    color: #ffffff !important; // Beyaz ok ikonu
+    font-weight: 500;
+  }
+}
+
+// Profil dropdown menüsü - Daha görünür tasarım
+.profile-menu {
+  .mat-mdc-menu-content {
+    background: rgba(255, 255, 255, 0.95) !important; // Beyaz arka plan
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 16px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    padding: 0;
+    min-width: 280px;
+  }
+
+  .profile-header {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    padding: 1.5rem;
+    border-radius: 16px 16px 0 0;
+    color: white;
+    text-align: center;
+
+    .profile-avatar {
+      width: 60px;
+      height: 60px;
+      background: rgba(255, 255, 255, 0.2);
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin: 0 auto 1rem;
+      backdrop-filter: blur(10px);
+    }
+
+    .profile-info {
+      .profile-name {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      }
+
+      .profile-email {
+        font-size: 0.9rem;
+        opacity: 0.9;
+        font-weight: 400;
+      }
+    }
+  }
+
+  .mat-mdc-menu-item {
+    padding: 0.75rem 1.5rem;
+    transition: all 0.2s ease;
+    
+    &:hover {
+      background: rgba(102, 126, 234, 0.1);
+    }
+
+    .mat-icon {
+      color: #667eea;
+      margin-right: 12px;
+    }
+
+    span {
+      color: #2d3748;
+      font-weight: 500;
+    }
+
+    &.logout-item {
+      color: #e53e3e;
+      
+      .mat-icon {
+        color: #e53e3e;
+      }
+      
+      span {
+        color: #e53e3e;
+      }
+      
+      &:hover {
+        background: rgba(229, 62, 62, 0.1);
+      }
+    }
+  }
+
+  .mat-divider {
+    margin: 0.5rem 0;
+    border-color: rgba(0, 0, 0, 0.1);
+  }
+}
+
 // User profile section (alt kısım)
 .user-profile-section {
   position: absolute;
@@ -328,7 +467,7 @@ $shadow-hover: rgba(0, 0, 0, 0.15);
     }
     
     &[data-menu="settings"] .menu-icon::before {
-      content: '⚙️';
+      content: '⚙';
     }
     
     &[data-menu="help"] .menu-icon::before {

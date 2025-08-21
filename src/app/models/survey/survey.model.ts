@@ -1,50 +1,65 @@
-// src/app/models/survey/survey.model.ts
+// models/survey/survey.model.ts
+export interface QuestionOption {
+  optionId?: number;
+  optionText: string;
+  optionValue: string;
+  imageUrl?: string;
+  sortOrder?: number;
+  isOtherOption?: boolean;
+  conditionalLogic?: string;
+  createdAt?: Date;
+}
 
 export interface Question {
-    id: string; // number → string'e değiştir
-    type: 'text' | 'textarea' | 'radio' | 'checkbox' | 'rating' | 'select';
-    title: string;
-    description?: string;
-    required: boolean;
-    options?: string[];
-    min?: number;
-    max?: number;
+  questionId: number;
+  questionTitle: string;
+  questionDescription?: string;
+  surveyId: number;
+  questionTypeId: number;
+  isRequired: boolean;
+  conditionalLogic?: string;
+  validationRules?: any; // Backend'de ValidationRules olarak geçiyor
+  createdAt: Date;
+  updatedAt?: Date;
+  options?: QuestionOption[];
 }
 
 export interface Survey {
-    id: string; // number → string'e değiştir
-    title: string;
-    description: string;
-    questions: Question[];
-    createdAt: Date;
-    isActive: boolean;
+  id: number;
+  title: string;
+  description: string;
+  questions: Question[];
+  createdAt: Date;
+  updatedAt?: Date;
+  isActive: boolean;
+  createdBy?: number;
+  responseCount?: number; // Yeni eklenen property
 }
-
 export interface SurveyResponse {
-    id: string; // number → string'e değiştir
-    surveyId: string; // number → string'e değiştir
-    answers: { [questionId: string]: any };
-    submittedAt: Date;
-    respondentName?: string;
+  id: number;
+  surveyId: number;
+  answers: { [questionId: number]: any };
+  submittedAt: Date;
+  respondentName?: string;
 }
 
 export interface SurveyResult {
-    survey: Survey;
-    responses: SurveyResponse[];
-    totalResponses: number;
-    questionStats: { [questionId: string]: any };
+  survey: Survey;
+  responses: SurveyResponse[];
+  totalResponses: number;
+  questionStats: { [questionId: number]: any };
 }
 
 // Backend Response DTOs
 export interface CreateSurveyResponse {
-    id: number;
-    title: string;
-    message?: string;
+  id: number;
+  title: string;
+  message?: string;
 }
 
 export interface SurveyStatsResponse {
-    survey: Survey;
-    totalResponses: number;
-    questionStats: { [questionId: string]: any };
-    responseRate?: number;
+  survey: Survey;
+  totalResponses: number;
+  questionStats: { [questionId: number]: any };
+  responseRate?: number;
 }

@@ -1,5 +1,243 @@
 <!-- Profile Sayfası HTML Template -->
-<!-- TODO: Kullanıcı bilgileri gösterimi -->
-<!-- TODO: Profil düzenleme formu -->
-<!-- TODO: Şifre değiştirme formu -->
-<!-- TODO: Hesap silme butonu ve onay modalı -->
+<div class="profile-container">
+  <!-- Loading Spinner -->
+  <div class="loading-overlay" *ngIf="isLoading">
+    <div class="loading-spinner">
+      <div class="spinner"></div>
+      <p>Yükleniyor...</p>
+    </div>
+  </div>
+
+  <!-- Success Message -->
+  <div class="success-message" *ngIf="showSuccessMessage">
+    <div class="message-content">
+      <span class="message-icon">✅</span>
+      <span class="message-text">{{ successMessage }}</span>
+    </div>
+  </div>
+
+  <!-- Error Message -->
+  <div class="error-message" *ngIf="showErrorMessage">
+    <div class="message-content">
+      <span class="message-icon">❌</span>
+      <span class="message-text">{{ errorMessage }}</span>
+    </div>
+  </div>
+
+  <!-- Header Section -->
+  <div class="profile-header">
+    <h1>Profil Bilgilerim</h1>
+    <p class="subtitle">Hesap bilgilerinizi görüntüleyin ve güncelleyin</p>
+  </div>
+
+  <!-- Profile Content -->
+  <div class="profile-content">
+    <!-- Personal Info Card -->
+    <div class="profile-card">
+      <div class="card-header">
+        <div class="avatar-section">
+          <div class="user-avatar">
+            {{ getUserInitials() }}
+          </div>
+          <div class="avatar-info">
+            <h3>{{ getUserDisplayName() }}</h3>
+            <span class="user-role">{{ getUserRole() }}</span>
+          </div>
+        </div>
+        <button class="btn-edit-avatar" (click)="changeAvatar()">
+          <span class="icon">📷</span>
+          Fotoğraf Değiştir
+        </button>
+      </div>
+
+      <div class="card-content">
+        <form (ngSubmit)="updateProfile()" #profileForm="ngForm">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="firstName">Ad</label>
+              <input 
+                id="firstName" 
+                type="text" 
+                [(ngModel)]="userProfile.firstName" 
+                name="firstName" 
+                required 
+                class="form-control">
+            </div>
+            <div class="form-group">
+              <label for="lastName">Soyad</label>
+              <input 
+                id="lastName" 
+                type="text" 
+                [(ngModel)]="userProfile.lastName" 
+                name="lastName" 
+                required 
+                class="form-control">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="email">E-posta</label>
+            <input 
+              id="email" 
+              type="email" 
+              [(ngModel)]="userProfile.email" 
+              name="email" 
+              required 
+              class="form-control"
+              readonly>
+            <small class="form-help">E-posta adresi değiştirilemez</small>
+          </div>
+
+          <div class="form-group">
+            <label for="phone">Telefon</label>
+            <input 
+              id="phone" 
+              type="tel" 
+              [(ngModel)]="userProfile.phone" 
+              name="phone" 
+              class="form-control">
+          </div>
+
+          <div class="form-group">
+            <label for="bio">Hakkımda</label>
+            <textarea 
+              id="bio" 
+              [(ngModel)]="userProfile.bio" 
+              name="bio" 
+              class="form-control" 
+              rows="4"
+              placeholder="Kendiniz hakkında kısa bir açıklama yazın..."></textarea>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn-primary" [disabled]="!profileForm.valid || isLoading">
+              <span class="icon">💾</span>
+              {{ isLoading ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet' }}
+            </button>
+            <button type="button" class="btn-secondary" (click)="resetForm()" [disabled]="isLoading">
+              <span class="icon">↺</span>
+              Sıfırla
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Security Card -->
+    <div class="profile-card">
+      <div class="card-header">
+        <h3>🔒 Güvenlik</h3>
+        <p>Şifre ve güvenlik ayarlarınızı güncelleyin</p>
+      </div>
+
+      <div class="card-content">
+        <form (ngSubmit)="changePassword()" #passwordForm="ngForm">
+          <div class="form-group">
+            <label for="currentPassword">Mevcut Şifre</label>
+            <input 
+              id="currentPassword" 
+              type="password" 
+              [(ngModel)]="passwordData.currentPassword" 
+              name="currentPassword" 
+              required 
+              class="form-control">
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="newPassword">Yeni Şifre</label>
+              <input 
+                id="newPassword" 
+                type="password" 
+                [(ngModel)]="passwordData.newPassword" 
+                name="newPassword" 
+                required 
+                class="form-control">
+            </div>
+            <div class="form-group">
+              <label for="confirmPassword">Şifre Tekrar</label>
+              <input 
+                id="confirmPassword" 
+                type="password" 
+                [(ngModel)]="passwordData.confirmPassword" 
+                name="confirmPassword" 
+                required 
+                class="form-control">
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn-primary" [disabled]="!passwordForm.valid || isLoading">
+              <span class="icon">🔐</span>
+              {{ isLoading ? 'Değiştiriliyor...' : 'Şifreyi Değiştir' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Account Stats Card -->
+    <div class="profile-card">
+      <div class="card-header">
+        <h3>📊 Hesap İstatistikleri</h3>
+        <p>Anket aktivitelerinizin özeti</p>
+      </div>
+
+      <div class="card-content">
+        <div class="stats-grid">
+          <div class="stat-item">
+            <div class="stat-icon">📋</div>
+            <div class="stat-info">
+              <span class="stat-number">{{ getTotalSurveys() }}</span>
+              <span class="stat-label">Toplam Anket</span>
+            </div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-icon">✅</div>
+            <div class="stat-info">
+              <span class="stat-number">{{ getActiveSurveys() }}</span>
+              <span class="stat-label">Aktif Anket</span>
+            </div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-icon">📨</div>
+            <div class="stat-info">
+              <span class="stat-number">{{ getTotalResponses() }}</span>
+              <span class="stat-label">Toplam Yanıt</span>
+            </div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-icon">📅</div>
+            <div class="stat-info">
+              <span class="stat-number">{{ getDaysActive() }}</span>
+              <span class="stat-label">Aktif Gün</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Danger Zone Card -->
+    <div class="profile-card danger-zone">
+      <div class="card-header">
+        <h3>⚠ Tehlikeli Bölge</h3>
+        <p>Bu işlemler geri alınamaz</p>
+      </div>
+
+      <div class="card-content">
+        <div class="danger-actions">
+          <div class="danger-item">
+            <div class="danger-info">
+              <h4>Hesabı Sil</h4>
+              <p>Tüm verileriniz kalıcı olarak silinecektir</p>
+            </div>
+            <button class="btn-danger" (click)="showDeleteAccountModal()" [disabled]="isLoading">
+              <span class="icon">🗑</span>
+              Hesabı Sil
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

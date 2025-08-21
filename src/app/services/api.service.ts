@@ -1,9 +1,11 @@
-import { Injectable } from '@angular/core';
+// src/app/services/api.service.ts
 import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { QuestionType } from '../models/question-type.model';
 
-// API Endpoints sabitleri - Gerçek endpoint'lerinize göre
+// API Endpoints sabitleri
 export const API_ENDPOINTS = {
   // Authentication endpoints
   AUTH: {
@@ -30,24 +32,47 @@ export const API_ENDPOINTS = {
   SURVEYS: {
     GET_ALL: '/api/Surveys',
     CREATE: '/api/Surveys',
-    GET_BY_ID: (id: string) => `/api/Surveys/${id}`,
-    UPDATE: (id: string) => `/api/Surveys/${id}`,
-    DELETE: (id: string) => `/api/Surveys/${id}`
+    GET_BY_ID: (id: number) => `/api/Surveys/${id}`,
+    UPDATE: (id: number) => `/api/Surveys/${id}`,
+    DELETE: (id: number) => `/api/Surveys/${id}`
   },
 
   // Survey Responses endpoints  
   SURVEY_RESPONSES: {
     SUBMIT: '/api/SurveyResponses',
-    GET_BY_SURVEY: (surveyId: string) => `/api/SurveyResponses/survey/${surveyId}`,
-    GET_BY_ID: (id: string) => `/api/SurveyResponses/${id}`,
-    DELETE: (id: string) => `/api/SurveyResponses/${id}`,
-    GET_STATISTICS: (surveyId: string) => `/api/SurveyResponses/statistics/${surveyId}`
+    GET_BY_SURVEY: (surveyId: number) => `/api/SurveyResponses/survey/${surveyId}`,
+    GET_BY_ID: (id: number) => `/api/SurveyResponses/${id}`,
+    DELETE: (id: number) => `/api/SurveyResponses/${id}`,
+    GET_STATISTICS: (surveyId: number) => `/api/SurveyResponses/statistics/${surveyId}`
   },
 
   // Dashboard/Analytics endpoints
   DASHBOARD: {
     GET_STATS: '/api/Dashboard/stats',
     GET_USER_SURVEYS: '/api/Dashboard/user-surveys'
+  },
+
+  // Questions endpoints
+  QUESTIONS: {
+    CREATE: '/api/questions',
+    UPDATE: (id: number) => `/api/questions/${id}`,
+    DELETE: (id: number) => `/api/questions/${id}`,
+    GET_BY_ID: (id: number) => `/api/questions/${id}`,
+    GET_BY_SURVEY: (surveyId: number) => `/api/questions/by-survey/${surveyId}`,
+    GET_TYPES: '/api/questiontypes',
+    REORDER: '/api/questions/reorder',
+    BATCH_UPDATE: '/api/questions/batch-update'
+  },
+
+  // Yeni eklenen endpoint grupları
+  SURVEY_SETTINGS: {
+    UPDATE: (surveyId: number) => `/api/surveys/${surveyId}/settings`,
+    GET_SETTINGS: (surveyId: number) => `/api/surveys/${surveyId}/settings`
+  },
+
+  ANALYTICS: {
+    GET_QUESTION_STATS: (questionId: number) => `/api/analytics/questions/${questionId}`,
+    GET_SURVEY_INSIGHTS: (surveyId: number) => `/api/analytics/surveys/${surveyId}/insights`
   }
 } as const;
 
@@ -176,15 +201,15 @@ export class ApiService {
     return this.post(API_ENDPOINTS.SURVEYS.CREATE, surveyData);
   }
 
-  getSurveyById(id: string): Observable<any> {
+  getSurveyById(id: number): Observable<any> {
     return this.get(API_ENDPOINTS.SURVEYS.GET_BY_ID(id));
   }
 
-  updateSurvey(id: string, surveyData: any): Observable<any> {
+  updateSurvey(id: number, surveyData: any): Observable<any> {
     return this.put(API_ENDPOINTS.SURVEYS.UPDATE(id), surveyData);
   }
 
-  deleteSurvey(id: string): Observable<any> {
+  deleteSurvey(id: number): Observable<any> {
     return this.delete(API_ENDPOINTS.SURVEYS.DELETE(id));
   }
 
@@ -193,19 +218,19 @@ export class ApiService {
     return this.post(API_ENDPOINTS.SURVEY_RESPONSES.SUBMIT, responseData);
   }
 
-  getSurveyResponses(surveyId: string): Observable<any> {
+  getSurveyResponses(surveyId: number): Observable<any> {
     return this.get(API_ENDPOINTS.SURVEY_RESPONSES.GET_BY_SURVEY(surveyId));
   }
 
-  getSurveyResponseById(id: string): Observable<any> {
+  getSurveyResponseById(id: number): Observable<any> {
     return this.get(API_ENDPOINTS.SURVEY_RESPONSES.GET_BY_ID(id));
   }
 
-  deleteSurveyResponse(id: string): Observable<any> {
+  deleteSurveyResponse(id: number): Observable<any> {
     return this.delete(API_ENDPOINTS.SURVEY_RESPONSES.DELETE(id));
   }
 
-  getSurveyStatistics(surveyId: string): Observable<any> {
+  getSurveyStatistics(surveyId: number): Observable<any> {
     return this.get(API_ENDPOINTS.SURVEY_RESPONSES.GET_STATISTICS(surveyId));
   }
 
@@ -216,5 +241,61 @@ export class ApiService {
 
   getUserSurveys(): Observable<any> {
     return this.get(API_ENDPOINTS.DASHBOARD.GET_USER_SURVEYS);
+  }
+
+  // ❓ QUESTIONS METHODS
+  createQuestion(questionData: any): Observable<any> {
+    return this.post(API_ENDPOINTS.QUESTIONS.CREATE, questionData);
+  }
+
+  updateQuestion(id: number, questionData: any): Observable<any> {
+    return this.put(API_ENDPOINTS.QUESTIONS.UPDATE(id), questionData);
+  }
+
+  deleteQuestion(id: number): Observable<any> {
+    return this.delete(API_ENDPOINTS.QUESTIONS.DELETE(id));
+  }
+
+  getQuestionById(id: number): Observable<any> {
+    return this.get(API_ENDPOINTS.QUESTIONS.GET_BY_ID(id));
+  }
+
+  getQuestionsBySurvey(surveyId: number): Observable<any> {
+    return this.get(API_ENDPOINTS.QUESTIONS.GET_BY_SURVEY(surveyId));
+  }
+
+  // YENİ EKLENDİ: Soru tiplerini getir
+  getQuestionTypes(): Observable<QuestionType[]> {
+    return this.get(API_ENDPOINTS.QUESTIONS.GET_TYPES);
+  }
+
+  // YENİ EKLENDİ: Soru sıralamasını güncelle
+  reorderQuestions(surveyId: number, questionIds: number[]): Observable<any> {
+    return this.put(API_ENDPOINTS.QUESTIONS.REORDER, { surveyId, questionIds });
+  }
+  
+  // YENİ EKLENDİ: Toplu soru güncelleme
+  batchUpdateQuestions(updates: any[]): Observable<any> {
+    return this.put(API_ENDPOINTS.QUESTIONS.BATCH_UPDATE, { updates });
+  }
+  
+  // YENİ EKLENDİ: Anket ayarlarını güncelle
+  updateSurveySettings(surveyId: number, settings: any): Observable<any> {
+    return this.put(API_ENDPOINTS.SURVEY_SETTINGS.UPDATE(surveyId), settings);
+  }
+  
+  // YENİ EKLENDİ: Anket ayarlarını getir
+  getSurveySettings(surveyId: number): Observable<any> {
+    return this.get(API_ENDPOINTS.SURVEY_SETTINGS.GET_SETTINGS(surveyId));
+  }
+  
+  // YENİ EKLENDİ: Soru istatistiklerini getir
+  getQuestionStats(questionId: number): Observable<any> {
+    return this.get(API_ENDPOINTS.ANALYTICS.GET_QUESTION_STATS(questionId));
+  }
+  
+  // YENİ EKLENDİ: Anket içgörülerini getir
+  getSurveyInsights(surveyId: number): Observable<any> {
+    return this.get(API_ENDPOINTS.ANALYTICS.GET_SURVEY_INSIGHTS(surveyId));
   }
 }

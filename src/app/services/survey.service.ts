@@ -1,9 +1,10 @@
-// src/app/services/survey.service.ts - Backend entegrasyonu
+// src/app/services/survey.service.ts
 import { Injectable } from '@angular/core';
 import { Observable, BehaviorSubject, of } from 'rxjs';
 import { map, tap, catchError } from 'rxjs/operators';
 import { ApiService } from './api.service';
-import { Survey, SurveyResponse, SurveyResult } from '../models/survey/survey.model';
+import { QuestionService } from './question.service';
+import { Survey, SurveyResponse, SurveyResult, Question } from '../models/survey/survey.model';
 
 @Injectable({
   providedIn: 'root'
@@ -12,7 +13,10 @@ export class SurveyService {
   private surveysSubject = new BehaviorSubject<Survey[]>([]);
   private responsesSubject = new BehaviorSubject<SurveyResponse[]>([]);
 
-  constructor(private apiService: ApiService) {
+  constructor(
+    private apiService: ApiService,
+    private questionService: QuestionService
+  ) {
     this.loadUserSurveys();
   }
 
@@ -29,39 +33,29 @@ export class SurveyService {
     return this.apiService.getSurveys().pipe(
       tap((rawData: any) => {
         console.log('🔍 RAW Backend Data:', rawData);
-        console.log('🔍 Data Type:', typeof rawData);
-        console.log('🔍 Is Array:', Array.isArray(rawData));
-        if (Array.isArray(rawData) && rawData.length > 0) {
-          console.log('🔍 First Survey Structure:', rawData[0]);
-          console.log('🔍 First Survey Keys:', Object.keys(rawData[0]));
-        }
       }),
       map((surveys: any) => {
-        // Eğer data null, undefined veya array değilse boş array döndür
         if (!surveys || !Array.isArray(surveys)) {
           console.warn('⚠️ Backend returned non-array data:', surveys);
           return [];
         }
 
-        // Backend DTO'ya göre mapping - SurveyResponseDto
         return surveys.map((surveyDto: any) => {
-          console.log('🔄 Processing survey DTO:', surveyDto);
-          
           const survey: Survey = {
-            id: surveyDto.surveyId ? surveyDto.surveyId.toString() : `unknown-${Date.now()}`,
+            id: surveyDto.id || surveyDto.surveyId,
             title: surveyDto.title || 'Başlıksız Anket',
             description: surveyDto.description || '',
-            questions: [], // DTO'da questions yok, boş array
+            questions: surveyDto.questions || [],
             createdAt: surveyDto.createdAt ? new Date(surveyDto.createdAt) : new Date(),
-            isActive: true // DTO'da bu field yok, default true
+            updatedAt: surveyDto.updatedAt ? new Date(surveyDto.updatedAt) : undefined,
+            isActive: surveyDto.isActive !== undefined ? surveyDto.isActive : true,
+            createdBy: surveyDto.createdBy
           };
           
-          console.log('✅ Mapped survey:', survey);
           return survey;
         });
       }),
       tap((processedSurveys: Survey[]) => {
-        console.log('✅ Final Processed Surveys:', processedSurveys);
         this.surveysSubject.next(processedSurveys);
       }),
       catchError(error => {
@@ -72,10 +66,10 @@ export class SurveyService {
     );
   }
 
-  getSurveyById(id: string): Observable<Survey | null> {
+  getSurveyById(id: number): Observable<Survey | null> {
     console.log('🔍 Getting survey by ID:', id);
     
-    // Önce local'den bak (string karşılaştırma)
+    // Önce local'den bak
     const localSurvey = this.surveysSubject.value.find(s => s.id === id);
     if (localSurvey) {
       console.log('✅ Found survey locally:', localSurvey.title);
@@ -88,10 +82,14 @@ export class SurveyService {
         if (!survey) return null;
         
         return {
-          ...survey,
-          id: survey.id.toString(), // Backend'den gelen ID'yi string'e çevir
+          id: survey.id,
+          title: survey.title,
+          description: survey.description,
           questions: survey.questions || [],
-          createdAt: new Date(survey.createdAt)
+          createdAt: new Date(survey.createdAt),
+          updatedAt: survey.updatedAt ? new Date(survey.updatedAt) : undefined,
+          isActive: survey.isActive,
+          createdBy: survey.createdBy
         };
       }),
       catchError(error => {
@@ -101,7 +99,7 @@ export class SurveyService {
     );
   }
 
-  createSurvey(survey: Omit<Survey, 'id' | 'createdAt'>): Observable<any> {
+  createSurvey(survey: Omit<Survey, 'id' | 'createdAt' | 'updatedAt'>): Observable<any> {
     console.log('📝 Creating survey:', survey.title);
     
     return this.apiService.createSurvey(survey).pipe(
@@ -116,7 +114,7 @@ export class SurveyService {
     );
   }
 
-  updateSurvey(id: string, survey: Partial<Survey>): Observable<any> {
+  updateSurvey(id: number, survey: Partial<Survey>): Observable<any> {
     console.log('📝 Updating survey:', id);
     
     return this.apiService.updateSurvey(id, survey).pipe(
@@ -131,7 +129,7 @@ export class SurveyService {
     );
   }
 
-  deleteSurvey(id: string): Observable<any> {
+  deleteSurvey(id: number): Observable<any> {
     console.log('🗑️ Deleting survey:', id);
     
     return this.apiService.deleteSurvey(id).pipe(
@@ -161,20 +159,18 @@ export class SurveyService {
     );
   }
 
-  getSurveyResponses(surveyId: string): Observable<SurveyResponse[]> {
+  getSurveyResponses(surveyId: number): Observable<SurveyResponse[]> {
     console.log('📊 Getting responses for survey:', surveyId);
     
     return this.apiService.getSurveyResponses(surveyId).pipe(
       map((responses: any[]) => {
         return responses.map(response => ({
-          ...response,
-          id: response.id.toString(),
-          surveyId: response.surveyId.toString(),
-          submittedAt: new Date(response.submittedAt)
+          id: response.id,
+          surveyId: response.surveyId,
+          answers: response.answers,
+          submittedAt: new Date(response.submittedAt),
+          respondentName: response.respondentName
         }));
-      }),
-      tap((responses) => {
-        console.log('✅ Loaded responses:', responses.length);
       }),
       catchError(error => {
         console.error('❌ Error loading responses:', error);
@@ -183,24 +179,30 @@ export class SurveyService {
     );
   }
 
-  getSurveyStatistics(surveyId: string): Observable<SurveyResult> {
+  getSurveyStatistics(surveyId: number): Observable<SurveyResult> {
     console.log('📈 Getting statistics for survey:', surveyId);
     
     return this.apiService.getSurveyStatistics(surveyId).pipe(
       map((stats: any) => ({
-        ...stats,
         survey: {
-          ...stats.survey,
-          id: stats.survey.id.toString(),
+          id: stats.survey.id,
+          title: stats.survey.title,
+          description: stats.survey.description,
           questions: stats.survey.questions || [],
-          createdAt: new Date(stats.survey.createdAt)
+          createdAt: new Date(stats.survey.createdAt),
+          updatedAt: stats.survey.updatedAt ? new Date(stats.survey.updatedAt) : undefined,
+          isActive: stats.survey.isActive,
+          createdBy: stats.survey.createdBy
         },
         responses: stats.responses.map((r: any) => ({
-          ...r,
-          id: r.id.toString(),
-          surveyId: r.surveyId.toString(),
-          submittedAt: new Date(r.submittedAt)
-        }))
+          id: r.id,
+          surveyId: r.surveyId,
+          answers: r.answers,
+          submittedAt: new Date(r.submittedAt),
+          respondentName: r.respondentName
+        })),
+        totalResponses: stats.totalResponses,
+        questionStats: stats.questionStats
       })),
       catchError(error => {
         console.error('❌ Error loading statistics:', error);
@@ -209,7 +211,24 @@ export class SurveyService {
     );
   }
 
-  // Dashboard Stats - Observable'lar
+  // Question Operations
+  createQuestion(question: Question): Observable<any> {
+    return this.questionService.createQuestion(question);
+  }
+
+  updateQuestion(id: number, question: Question): Observable<any> {
+    return this.questionService.updateQuestion(id, question);
+  }
+
+  deleteQuestion(id: number): Observable<any> {
+    return this.questionService.deleteQuestion(id);
+  }
+
+  getQuestionsBySurvey(surveyId: number): Observable<any> {
+    return this.questionService.getQuestionsBySurvey(surveyId);
+  }
+
+  // Dashboard Stats
   getSurveyCount(): Observable<number> {
     return this.surveysSubject.asObservable().pipe(
       map(surveys => surveys.length)
@@ -228,11 +247,10 @@ export class SurveyService {
 
   // Utility Methods
   private refreshSurveys(): void {
-    // Backend'den tekrar yükle
     this.getSurveys().subscribe();
   }
 
-  getSurveyByIdSync(id: string): Survey | undefined {
-    return this.surveysSubject.value.find(survey => survey.id === id); // String karşılaştırma
+  getSurveyByIdSync(id: number): Survey | undefined {
+    return this.surveysSubject.value.find(survey => survey.id === id);
   }
 }

@@ -3,131 +3,132 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Survey, SurveyResponse } from '../../../models/survey/survey.model';
-import { SurveyService } from '../../../services/survey.service';
+import { QuestionType } from '../../../models/question-type.model';
+import { ApiService } from '../../../services/api.service';
 
 @Component({
-  selector: 'app-survey-take',
-  standalone: true,
-  imports: [CommonModule, FormsModule],
-  templateUrl: './survey-take.component.html',
-  styleUrls: ['./survey-take.component.scss'] // Uzantı .scss olarak değiştirildi
+	selector: 'app-survey-take',
+	standalone: true,
+	templateUrl: './survey-take.component.html',
+	styleUrls: ['./survey-take.component.scss'],
+	imports: [CommonModule, FormsModule]
 })
 export class SurveyTakeComponent implements OnInit {
-  //... diğer kodlar aynı kalacak
-  survey!: Survey;
-  answers: { [questionId: string]: any } = {};
-  respondentName = '';
-  submitting = false;
-  errors: Set<string> = new Set();
+	survey: any = { questions: [] };
+	questionTypes: QuestionType[] = [];
+	answers: { [key: number]: any } = {};
+	respondentName: string = '';
+	submitting = false;
+	errors: number[] = [];
 
-  constructor(
-    private route: ActivatedRoute,
-    private router: Router,
-    private surveyService: SurveyService
-  ) {}
+	constructor(
+		private apiService: ApiService,
+		private route: ActivatedRoute,
+		private router: Router
+	) {}
 
-  ngOnInit(): void {
-    const id = this.route.snapshot.paramMap.get('id');
-    if (id) {
-      this.surveyService.getSurveyById(id).subscribe({
-        next: (survey) => {
-          if (survey) {
-            this.survey = survey;
-          } else {
-            this.router.navigate(['/dashboard/surveys']);
-          }
-        },
-        error: (error) => {
-          console.error('Error loading survey:', error);
-          this.router.navigate(['/dashboard/surveys']);
-        }
-      });
-    } else {
-     this.router.navigate(['/dashboard/surveys']);
-    }
-  }
+	ngOnInit(): void {
+		this.loadQuestionTypes();
+		this.loadSurvey();
+	}
 
-  hasRequiredQuestions(): boolean {
-    return this.survey.questions.some(q => q.required);
-  }
+	loadQuestionTypes(): void {
+		this.apiService.getQuestionTypes().subscribe({
+			next: (types) => {
+				this.questionTypes = types;
+			},
+			error: (error) => {
+				console.error('Soru tipleri yüklenirken hata:', error);
+			}
+		});
+	}
 
-  isChecked(questionId: string, option: string): boolean {
-    const answer = this.answers[questionId];
-    return Array.isArray(answer) && answer.includes(option);
-  }
+	loadSurvey(): void {
+		const surveyId = this.route.snapshot.params['id'];
+		this.apiService.getSurveyById(surveyId).subscribe({
+			next: (survey) => {
+				this.survey = survey;
+			},
+			error: (error) => {
+				console.error('Anket yüklenirken hata:', error);
+			}
+		});
+	}
 
-  onCheckboxChange(questionId: string, option: string, event: Event): void {
-    const target = event.target as HTMLInputElement;
-    const currentAnswers = this.answers[questionId] || [];
-    
-    if (target.checked) {
-      this.answers[questionId] = [...currentAnswers, option];
-    } else {
-      this.answers[questionId] = currentAnswers.filter((item: string) => item !== option);
-    }
-  }
+	hasRequiredQuestions(): boolean {
+		return this.survey.questions.some((q: any) => q.isRequired);
+	}
 
-  selectRating(questionId: string, rating: number): void {
-    this.answers[questionId] = rating;
-  }
+	hasError(questionId: number): boolean {
+		return this.errors.includes(questionId);
+	}
 
-  getRatingRange(question: any): number[] {
-    const min = question.min || 1;
-    const max = question.max || 5;
-    return Array.from({ length: max - min + 1 }, (_, i) => min + i);
-  }
+	isChecked(questionId: number, optionValue: string): boolean {
+		return this.answers[questionId] && this.answers[questionId].includes(optionValue);
+	}
 
-  hasError(questionId: string): boolean {
-    return this.errors.has(questionId);
-  }
+	onCheckboxChange(questionId: number, optionValue: string, event: any): void {
+		if (!this.answers[questionId]) {
+			this.answers[questionId] = [];
+		}
+		
+		if (event.target.checked) {
+			if (!this.answers[questionId].includes(optionValue)) {
+				this.answers[questionId].push(optionValue);
+			}
+		} else {
+			this.answers[questionId] = this.answers[questionId].filter((v: string) => v !== optionValue);
+		}
+	}
 
-  validateForm(): boolean {
-    this.errors.clear();
-    
-    for (const question of this.survey.questions) {
-      if (question.required) {
-        const answer = this.answers[question.id.toString()];
-        
-        if (answer === undefined || answer === null || answer === '') {
-          this.errors.add(question.id.toString());
-        } else if (question.type === 'checkbox' && (!Array.isArray(answer) || answer.length === 0)) {
-          this.errors.add(question.id.toString());
-        }
-      }
-    }
+	selectRating(questionId: number, rating: number): void {
+		this.answers[questionId] = rating;
+	}
 
-    return this.errors.size === 0;
-  }
+	onFileChange(questionId: number, event: any): void {
+		const file = event.target.files[0];
+		if (file) {
+			this.answers[questionId] = file;
+		}
+	}
 
-  async onSubmit(): Promise<void> {
-    if (!this.validateForm()) {
-      const firstErrorElement = document.querySelector('.question-card.has-error');
-      firstErrorElement?.scrollIntoView({ behavior: 'smooth' });
-      return;
-    }
+	onSubmit(): void {
+		this.errors = [];
+		
+		this.survey.questions.forEach((question: any) => {
+			if (question.isRequired && !this.answers[question.questionId]) {
+				this.errors.push(question.questionId);
+			}
+		});
 
-    this.submitting = true;
+		if (this.errors.length > 0) {
+		 return;
+		}
 
-    try {
-      const response = {
-        surveyId: this.survey.id,
-        answers: { ...this.answers },
-        respondentName: this.respondentName.trim() || undefined
-      };
+		this.submitting = true;
+		
+		const responseData = {
+			surveyId: this.survey.id,
+			respondentName: this.respondentName,
+			answers: Object.keys(this.answers).map(questionId => ({
+				questionId: parseInt(questionId),
+				answer: this.answers[parseInt(questionId)]
+			}))
+		};
 
-      await this.surveyService.submitResponse(response).toPromise();
-      alert('Yanıtınız başarıyla kaydedildi! Teşekkür ederiz.');
-      this.router.navigate(['/dashboard/surveys']);
-    } catch (error) {
-      console.error('Error submitting response:', error);
-      alert('Yanıt gönderilirken hata oluştu!');
-    } finally {
-      this.submitting = false;
-    }
-  }
+		this.apiService.submitSurveyResponse(responseData).subscribe({
+			next: () => {
+				this.submitting = false;
+				this.router.navigate(['/survey-thank-you']);
+			},
+			error: (error) => {
+				console.error('Yanıt gönderilirken hata:', error);
+				this.submitting = false;
+			}
+		});
+	}
 
-  onBack(): void {
-    this.router.navigate(['/dashboard/surveys']);
-  }
+	onBack(): void {
+		this.router.navigate(['/surveys']);
+	}
 }

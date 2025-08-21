@@ -1,3 +1,4 @@
+<!-- src/app/pages/surveys/survey-take/survey-take.component.html -->
 <div class="survey-viewer">
   <div class="survey-header">
     <h1>{{ survey.title }}</h1>
@@ -17,97 +18,181 @@
       <div
         *ngFor="let question of survey.questions; let i = index"
         class="question-card"
-        [class.has-error]="hasError(question.id.toString())">
+        [class.has-error]="hasError(question.questionId)">
         
         <div class="question-header">
           <h3 class="question-title">
-            {{ i + 1 }}. {{ question.title }}
-            <span class="required-mark" *ngIf="question.required">*</span>
+            {{ i + 1 }}. {{ question.questionTitle }}
+            <span class="required-mark" *ngIf="question.isRequired">*</span>
           </h3>
-          <p *ngIf="question.description" class="question-description">
-            {{ question.description }}
+          <p *ngIf="question.questionDescription" class="question-description">
+            {{ question.questionDescription }}
           </p>
         </div>
 
         <div class="question-input">
+          <!-- Kısa Metin (1) -->
           <input
-            *ngIf="question.type === 'text'"
+            *ngIf="question.questionTypeId === 1"
             type="text"
-            [(ngModel)]="answers[question.id.toString()]"
-            [name]="question.id.toString()"
-            [required]="question.required"
+            [(ngModel)]="answers[question.questionId]"
+            [name]="'question-' + question.questionId"
+            [required]="question.isRequired"
             class="form-control"
             placeholder="Cevabınızı yazın...">
 
+          <!-- Uzun Metin (2) -->
           <textarea
-            *ngIf="question.type === 'textarea'"
-            [(ngModel)]="answers[question.id.toString()]"
-            [name]="question.id.toString()"
-            [required]="question.required"
+            *ngIf="question.questionTypeId === 2"
+            [(ngModel)]="answers[question.questionId]"
+            [name]="'question-' + question.questionId"
+            [required]="question.isRequired"
             class="form-control"
             rows="4"
             placeholder="Cevabınızı yazın..."></textarea>
 
-          <div *ngIf="question.type === 'radio'" class="radio-group">
+          <!-- Tekil Seçim - Radio (3) -->
+          <div *ngIf="question.questionTypeId === 3" class="radio-group">
             <label
               *ngFor="let option of question.options; let optIndex = index"
               class="radio-option">
               <input
                 type="radio"
-                [(ngModel)]="answers[question.id.toString()]"
-                [name]="question.id.toString()"
-                [value]="option"
-                [required]="question.required">
+                [(ngModel)]="answers[question.questionId]"
+                [name]="'question-' + question.questionId"
+                [value]="option.optionValue"
+                [required]="question.isRequired">
               <span class="radio-custom"></span>
-              {{ option }}
+              {{ option.optionText }}
             </label>
           </div>
 
-          <div *ngIf="question.type === 'checkbox'" class="checkbox-group">
+          <!-- Çoklu Seçim - Checkbox (4) -->
+          <div *ngIf="question.questionTypeId === 4" class="checkbox-group">
             <label
               *ngFor="let option of question.options; let optIndex = index"
               class="checkbox-option">
               <input
                 type="checkbox"
-                [checked]="isChecked(question.id.toString(), option)"
-                (change)="onCheckboxChange(question.id.toString(), option, $event)"
-                [name]="question.id.toString() + '_' + optIndex">
+                [checked]="isChecked(question.questionId, option.optionValue)"
+                (change)="onCheckboxChange(question.questionId, option.optionValue, $event)"
+                [name]="'question-' + question.questionId + '-option-' + optIndex">
               <span class="checkbox-custom"></span>
-              {{ option }}
+              {{ option.optionText }}
             </label>
           </div>
 
+          <!-- Dropdown (5) -->
           <select
-            *ngIf="question.type === 'select'"
-            [(ngModel)]="answers[question.id.toString()]"
-            [name]="question.id.toString()"
-            [required]="question.required"
+            *ngIf="question.questionTypeId === 5"
+            [(ngModel)]="answers[question.questionId]"
+            [name]="'question-' + question.questionId"
+            [required]="question.isRequired"
             class="form-control">
             <option value="">Seçiniz...</option>
-            <option *ngFor="let option of question.options" [value]="option">
-              {{ option }}
+            <option *ngFor="let option of question.options" [value]="option.optionValue">
+              {{ option.optionText }}
             </option>
           </select>
 
-          <div *ngIf="question.type === 'rating'" class="rating-group">
+          <!-- Sayı (6) -->
+          <input
+            *ngIf="question.questionTypeId === 6"
+            type="number"
+            [(ngModel)]="answers[question.questionId]"
+            [name]="'question-' + question.questionId"
+            [required]="question.isRequired"
+            class="form-control"
+            placeholder="Sayı girin...">
+
+          <!-- Tarih (7) -->
+          <input
+            *ngIf="question.questionTypeId === 7"
+            type="date"
+            [(ngModel)]="answers[question.questionId]"
+            [name]="'question-' + question.questionId"
+            [required]="question.isRequired"
+            class="form-control">
+
+          <!-- Saat (8) -->
+          <input
+            *ngIf="question.questionTypeId === 8"
+            type="time"
+            [(ngModel)]="answers[question.questionId]"
+            [name]="'question-' + question.questionId"
+            [required]="question.isRequired"
+            class="form-control">
+
+          <!-- Rating (9) -->
+          <div *ngIf="question.questionTypeId === 9" class="rating-group">
             <div class="rating-scale">
               <button
-                *ngFor="let rating of getRatingRange(question); let rIndex = index"
+                *ngFor="let rating of [1,2,3,4,5]; let rIndex = index"
                 type="button"
                 class="rating-button"
-                [class.selected]="answers[question.id.toString()] === rating"
-                (click)="selectRating(question.id.toString(), rating)">
-                {{ rating }}
+                [class.selected]="answers[question.questionId] === (rIndex + 1)"
+                (click)="selectRating(question.questionId, rIndex + 1)">
+                {{ rIndex + 1 }}
               </button>
             </div>
-            <div class="rating-labels" *ngIf="question.min && question.max">
-              <span>{{ question.min }} (Düşük)</span>
-              <span>{{ question.max }} (Yüksek)</span>
+            <div class="rating-labels">
+              <span>1 (Kötü)</span>
+              <span>5 (Mükemmel)</span>
             </div>
+          </div>
+
+          <!-- Scale (10) -->
+          <div *ngIf="question.questionTypeId === 10" class="scale-group">
+            <input
+              type="range"
+              [(ngModel)]="answers[question.questionId]"
+              [name]="'question-' + question.questionId"
+              [required]="question.isRequired"
+              min="1"
+              max="10"
+              class="form-control">
+            <div class="scale-value">
+              Değer: {{ answers[question.questionId] || 5 }}
+            </div>
+          </div>
+
+          <!-- Email (11) -->
+          <input
+            *ngIf="question.questionTypeId === 11"
+            type="email"
+            [(ngModel)]="answers[question.questionId]"
+            [name]="'question-' + question.questionId"
+            [required]="question.isRequired"
+            class="form-control"
+            placeholder="email@example.com">
+
+          <!-- Telefon (12) -->
+          <input
+            *ngIf="question.questionTypeId === 12"
+            type="tel"
+            [(ngModel)]="answers[question.questionId]"
+            [name]="'question-' + question.questionId"
+            [required]="question.isRequired"
+            class="form-control"
+            placeholder="05XX XXX XX XX">
+
+          <!-- Dosya Yükleme (13) -->
+          <div *ngIf="question.questionTypeId === 13" class="file-upload-group">
+            <input
+              type="file"
+              (change)="onFileChange(question.questionId, $event)"
+              [name]="'question-' + question.questionId"
+              [required]="question.isRequired"
+              class="form-control">
+          </div>
+
+          <!-- Basit metin gösterimi (14, 15 için) -->
+          <div *ngIf="question.questionTypeId === 14 || question.questionTypeId === 15" class="info-message">
+            <p>Bu soru tipi önizlemede gösterilemiyor. Anketi doldurmak için paylaşım linkini kullanın.</p>
           </div>
         </div>
 
-        <div class="error-message" *ngIf="hasError(question.id.toString())">
+        <div class="error-message" *ngIf="hasError(question.questionId)">
           Bu soru zorunludur
         </div>
       </div>

@@ -1,74 +1,79 @@
 <!-- src/app/pages/surveys/survey-edit/survey-edit.component.html -->
+
+
 <div class="survey-creator">
-  <div class="creator-header">
-    <h2>Anketi Düzenle: {{ survey.title }}</h2>
-  </div>
+	<div class="creator-header">
+		<h2>Anketi Düzenle: {{ survey.title }}</h2>
+	</div>
 
-  <form (ngSubmit)="saveSurvey()">
-    <div class="form-group">
-      <label for="title">Anket Başlığı</label>
-      <input id="title" type="text" [(ngModel)]="survey.title" name="title" required class="form-control">
-    </div>
-    <div class="form-group">
-      <label for="description">Açıklama</label>
-      <textarea id="description" [(ngModel)]="survey.description" name="description" class="form-control" rows="3"></textarea>
-    </div>
+	<div *ngIf="isLoading" class="loading-spinner">
+		<p>Yükleniyor...</p>
+	</div>
 
-    <h3>Sorular</h3>
-    <div class="questions-container">
-      <div *ngFor="let question of survey.questions; let i = index" class="question-card">
-        <div class="card-header">
-          <h4>Soru {{ i + 1 }}</h4>
-          <button type="button" class="btn-delete" (click)="removeQuestion(i)">
-            &times;
-          </button>
-        </div>
+	<form *ngIf="!isLoading" (ngSubmit)="saveSurvey()">
+		<div class="form-group">
+			<label for="title">Anket Başlığı</label>
+			<input id="title" type="text" [(ngModel)]="survey.title" name="title" required class="form-control">
+		</div>
+		<div class="form-group">
+			<label for="description">Açıklama</label>
+			<textarea id="description" [(ngModel)]="survey.description" name="description" class="form-control" rows="3"></textarea>
+		</div>
 
-        <div class="form-group">
-          <label>Soru Metni</label>
-          <input type="text" [(ngModel)]="question.title" name="question-title-{{i}}" required class="form-control">
-        </div>
+		<h3>Sorular</h3>
+		<div class="questions-container">
+			<div *ngFor="let question of survey.questions; let i = index; trackBy: trackByIndex" class="question-card">
+				<div class="card-header">
+					<h4>Soru {{ i + 1 }}</h4>
+					<button type="button" class="btn-delete" (click)="removeQuestion(i)">
+						&times;
+					</button>
+				</div>
 
-        <div class="form-group">
-          <label>Soru Tipi</label>
-          <select [(ngModel)]="question.type" name="question-type-{{i}}" class="form-control">
-            <option value="text">Metin Girişi (Tek Satır)</option>
-            <option value="textarea">Metin Alanı (Çok Satır)</option>
-            <option value="radio">Çoktan Seçmeli (Tek Seçim)</option>
-            <option value="checkbox">Çoktan Seçmeli (Çoklu Seçim)</option>
-            <option value="rating">Puanlama</option>
-          </select>
-        </div>
+				<div class="form-group">
+					<label>Soru Metni</label>
+					<input type="text" [(ngModel)]="question.questionTitle" [name]="'question-title-' + i" required class="form-control">
+				</div>
 
-        <div class="form-group" *ngIf="question.type === 'radio' || question.type === 'checkbox'">
-          <label>Seçenekler (Virgülle ayırın)</label>
-          <!-- Güncellenen kısım -->
-          <input type="text"
-                 [ngModel]="getOptionsString(question)"
-                 (input)="onOptionsChange(question, $event)"
-                 name="question-options-{{i}}"
-                 class="form-control">
-        </div>
-        
-        <div class="form-group">
-          <label class="checkbox-label">
-            <input type="checkbox" [(ngModel)]="question.required" name="question-required-{{i}}">
-            <span class="checkbox-custom"></span> Zorunlu Soru
-          </label>
-        </div>
-      </div>
-    </div>
+				<div class="form-group">
+					<label>Soru Tipi</label>
+					<select [(ngModel)]="question.questionTypeId" (ngModelChange)="onTypeChange(question)" [name]="'question-type-' + i" class="form-control">
+						<option *ngFor="let type of questionTypes" [ngValue]="type.id">
+							{{ type.description }}
+						</option>
+					</select>
+				</div>
 
-    <div class="action-buttons">
-      <button type="button" class="btn-secondary" (click)="addQuestion()">
-        <span class="icon">+</span> Yeni Soru Ekle
-      </button>
-      <button type="submit" class="btn-primary">
-        Anketi Güncelle
-      </button>
-      <button type="button" class="btn-secondary" (click)="cancel()">
-        İptal
-      </button>
-    </div>
-  </form>
+				<div class="form-group" *ngIf="requiresOptions(question.questionTypeId)">
+                    <label>Seçenekler</label>
+
+                    <div class="option-row" *ngFor="let opt of question.options; let oi = index; trackBy: trackByIndex">
+                        <input type="text"
+                            class="form-control"
+                            [ngModel]="opt.optionText"
+                            (ngModelChange)="onOptionTextChange(question, oi, $event)"
+                            [name]="'q' + i + '-opt-' + oi"
+                            placeholder="Seçenek metni">
+                        <button type="button" class="btn-delete" (click)="removeOption(question, oi)">×</button>
+                    </div>
+
+                    <button type="button" class="btn-secondary" (click)="addOption(question)">
+                        + Seçenek Ekle
+                    </button>
+                </div>
+			</div>
+		</div>
+
+		<div class="action-buttons">
+			<button type="button" class="btn-secondary" (click)="addQuestion()">
+				<span class="icon">+</span> Yeni Soru Ekle
+			</button>
+			<button type="submit" class="btn-primary">
+				Kaydet
+			</button>
+			<button type="button" class="btn-secondary" (click)="cancel()">
+				İptal
+			</button>
+		</div>
+	</form>
 </div>

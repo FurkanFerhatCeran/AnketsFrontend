@@ -1,3 +1,306 @@
-/* Survey Edit Sayfası CSS Stilleri */
-/* TODO: Survey-create ile aynı stilleri kullan */
-/* TODO: Edit modu için ek stiller (uyarı mesajları vs.) */
+/* Survey Edit Sayfası - Anketlerim sayfasına uygun tasarım */
+
+// Ana container - Arka plan resmi ile
+.survey-creator {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  min-height: 100vh;
+  background: url('/backgrounds/back.png') no-repeat center center;
+  background-size: cover;
+  background-attachment: scroll;
+  padding: 2rem;
+  position: relative;
+  
+  @media (max-width: 768px) {
+    padding: 1rem;
+  }
+}
+
+// Header Section - Beyaz arka plan, siyah yazı
+.creator-header {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 24px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  
+  h2 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #1a202c;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    
+    &::before {
+      content: '✏';
+      font-size: 2rem;
+    }
+    
+    @media (max-width: 768px) {
+      font-size: 2rem;
+    }
+  }
+}
+
+// Form container - Beyaz arka plan
+form {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 24px;
+  padding: 2rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+}
+
+// Form grupları
+.form-group {
+  margin-bottom: 1.5rem;
+  
+  label {
+    display: block;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #2d3748;
+    margin-bottom: 0.5rem;
+  }
+  
+  .form-control {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    font-size: 1rem;
+    color: #2d3748;
+    background: #ffffff;
+    transition: all 0.3s ease;
+    
+    &:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    
+    &::placeholder {
+      color: #a0aec0;
+    }
+  }
+  
+  textarea.form-control {
+    resize: vertical;
+    min-height: 100px;
+  }
+  
+  select.form-control {
+    cursor: pointer;
+  }
+}
+
+// Sorular başlığı
+h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #2d3748;
+  margin: 2rem 0 1rem 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+// Soru kartları
+.questions-container {
+  margin-bottom: 2rem;
+  
+  .question-card {
+    background: #f8fafc;
+    border: 2px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    transition: all 0.3s ease;
+    
+    &:hover {
+      border-color: #667eea;
+      box-shadow: 0 4px 20px rgba(102, 126, 234, 0.1);
+      transform: translateY(-2px);
+    }
+    
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      
+      h4 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #2d3748;
+        margin: 0;
+      }
+      
+      .btn-delete {
+        background: #fed7d7;
+        color: #c53030;
+        border: none;
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        font-size: 1.2rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        
+        &:hover {
+          background: #feb2b2;
+          transform: scale(1.1);
+        }
+      }
+    }
+  }
+}
+
+// Checkbox özel tasarımı
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  font-weight: 500;
+  color: #2d3748;
+  
+  input[type="checkbox"] {
+    display: none;
+  }
+  
+  .checkbox-custom {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #cbd5e0;
+    border-radius: 6px;
+    display: inline-block;
+    position: relative;
+    transition: all 0.3s ease;
+  }
+  
+  input[type="checkbox"]:checked + .checkbox-custom {
+    background: #667eea;
+    border-color: #667eea;
+    
+    &::after {
+      content: '✓';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: white;
+      font-size: 12px;
+      font-weight: bold;
+    }
+  }
+}
+
+// Action butonları
+.action-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  
+  @media (max-width: 768px) {
+    flex-direction: column;
+  }
+  
+  button {
+    padding: 1rem 2rem;
+    border: none;
+    border-radius: 16px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 160px;
+    justify-content: center;
+    
+    .icon {
+      font-size: 1.2rem;
+    }
+    
+    &.btn-secondary {
+      background: #f7fafc;
+      color: #4a5568;
+      border: 2px solid #e2e8f0;
+      
+      &:hover {
+        background: #edf2f7;
+        border-color: #cbd5e0;
+        transform: translateY(-2px);
+      }
+    }
+    
+    &.btn-primary {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+      
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+      }
+    }
+  }
+}
+
+// Edit modu için ek stiller
+.survey-creator {
+  // Mevcut anket bilgileri için özel stil
+  .form-control[value] {
+    background: #f7fafc;
+    border-color: #cbd5e0;
+    
+    &:focus {
+      background: #ffffff;
+      border-color: #667eea;
+    }
+  }
+  
+  // Değişiklik uyarısı için stil
+  .form-control.modified {
+    border-color: #f6ad55;
+    background: #fef5e7;
+    
+    &:focus {
+      border-color: #ed8936;
+      box-shadow: 0 0 0 3px rgba(237, 137, 54, 0.1);
+    }
+  }
+}
+
+// Responsive tasarım
+@media (max-width: 768px) {
+  .creator-header {
+    padding: 1.5rem;
+    
+    h2 {
+      font-size: 2rem;
+    }
+  }
+  
+  form {
+    padding: 1.5rem;
+  }
+  
+  .action-buttons {
+    button {
+      min-width: 100%;
+    }
+  }
+}
