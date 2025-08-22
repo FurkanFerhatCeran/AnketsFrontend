@@ -25,15 +25,17 @@ export interface Question {
 }
 
 export interface Survey {
-  id: number;
-  title: string;
-  description: string;
-  questions: Question[];
-  createdAt: Date;
-  updatedAt?: Date;
-  isActive: boolean;
-  createdBy?: number;
-  responseCount?: number; // Yeni eklenen property
+    surveyId: number; // Burayı "id" yerine "surveyId" yapıyoruz
+    title: string; // Backend DTO'su ile eşleşiyor
+    description: string; // Backend DTO'su ile eşleşiyor
+    questions?: Question[];
+    createdAt: Date;
+    updatedAt?: Date;
+    isActive: boolean;
+    createdBy?: number;
+    responseCount?: number;
+    // Backend'de doğrudan bulunmadığı için frontend'de eklediğimiz bir özellik:
+    questionCount?: number; 
 }
 export interface SurveyResponse {
   id: number;

@@ -1,233 +1,221 @@
-<!-- src/app/pages/surveys/survey-list/survey-list.component.html -->
 <div class="survey-list-container">
-  <!-- Header Section -->
-  <div class="header-section">
-    <div class="header-content">
-      <div class="header-text">
-        <h1 class="main-title">
-          <span class="title-icon">📊</span>
-          Anketlerim
-        </h1>
-        <p class="subtitle">Anketlerinizi oluşturun, yönetin ve analiz edin</p>
-      </div>
-      
-      <div class="header-actions">
-        <button class="btn-create" (click)="navigateToCreate()">
-          <span class="btn-icon">✨</span>
-          Yeni Anket Oluştur
-        </button>
-      </div>
-    </div>
-    
-    <!-- Stats Bar -->
-    <div class="stats-bar" *ngIf="surveys.length > 0">
-      <div class="stat-item">
-        <span class="stat-number">{{ surveys.length }}</span>
-        <span class="stat-label">Toplam Anket</span>
-      </div>
-      <div class="stat-item">
-        <span class="stat-number">{{ getActiveCount() }}</span>
-        <span class="stat-label">Aktif Anket</span>
-      </div>
-      <div class="stat-item">
-        <span class="stat-number">{{ getTotalResponses() }}</span>
-        <span class="stat-label">Toplam Yanıt</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- Surveys Grid -->
-  <div class="content-section">
-    <div class="surveys-grid" *ngIf="surveys.length > 0; else emptySurveys">
-      <div
-        *ngFor="let survey of surveys; trackBy: trackBySurvey"
-        class="survey-card"
-        [class.inactive]="!survey.isActive">
-        
-        <!-- Card Header -->
-        <div class="card-header">
-          <div class="survey-badge" [class.active]="survey.isActive">
-            <span class="badge-icon">{{ survey.isActive ? '🟢' : '🔴' }}</span>
-            <span class="badge-text">{{ survey.isActive ? 'Aktif' : 'Pasif' }}</span>
-          </div>
-          
-          <div class="header-actions">
-            <button 
-              class="quick-action-btn delete" 
-              (click)="confirmDelete(survey)"
-              title="Hızlı Sil">
-              <span class="btn-icon">🗑️</span>
-            </button>
-            
-            <button 
-              class="quick-action-btn menu" 
-              (click)="toggleDropdown(survey.id)"
-              title="Menü">
-              <span class="dots">⋮</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Card Content -->
-        <div class="card-content">
-          <h3 class="survey-title">{{ survey.title }}</h3>
-          <p class="survey-description" *ngIf="survey.description">
-            {{ survey.description }}
-          </p>
-          
-          <!-- Survey Stats -->
-          <div class="survey-stats">
-            <div class="stat-chip">
-              <span class="chip-icon">❓</span>
-              <span class="chip-text">{{ survey.questions.length || 0 }} soru</span>
+    <div class="header-section">
+        <div class="header-content">
+            <div class="header-text">
+                <h1 class="main-title">
+                    <span class="title-icon">📊</span>
+                    Anketlerim
+                </h1>
+                <p class="subtitle">Anketlerinizi oluşturun, yönetin ve analiz edin</p>
             </div>
             
-            <div class="stat-chip" *ngIf="getResponseCount(survey.id) > 0">
-              <span class="chip-icon">💬</span>
-              <span class="chip-text">{{ getResponseCount(survey.id) }} yanıt</span>
+            <div class="header-actions">
+                <button class="btn-create" (click)="navigateToCreate()">
+                    <span class="btn-icon">✨</span>
+                    Yeni Anket Oluştur
+                </button>
             </div>
-            
-            <div class="stat-chip">
-              <span class="chip-icon">📅</span>
-              <span class="chip-text">{{ formatDate(survey.createdAt) }}</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Card Actions -->
-        <div class="card-actions">
-          <button 
-            class="action-btn preview" 
-            (click)="navigateToView(survey.id)" 
-            title="Anketi Önizle">
-            <span class="btn-icon">🔗</span>
-            <span class="btn-text">Önizle</span>
-          </button>
-          
-          <button 
-            class="action-btn edit" 
-            (click)="navigateToEdit(survey.id)" 
-            title="Düzenle">
-            <span class="btn-icon">✏️</span>
-            <span class="btn-text">Düzenle</span>
-          </button>
-          
-          <button 
-            class="action-btn stats" 
-            (click)="navigateToResults(survey.id)" 
-            title="İstatistikler">
-            <span class="btn-icon">📊</span>
-            <span class="btn-text">İstatistik</span>
-          </button>
-          
-          <div class="action-dropdown" [class.open]="activeDropdown === survey.id">
-            <button 
-              class="action-btn more" 
-              (click)="toggleDropdown(survey.id)"
-              title="Daha Fazla Seçenek">
-              <span class="btn-icon">⚙️</span>
-              <span class="btn-text">Diğer</span>
-            </button>
-            
-            <div class="dropdown-menu" [class.open]="activeDropdown === survey.id">
-              <button (click)="shareSurvey(survey)" class="dropdown-item">
-                <span class="item-icon">🔗</span>
-                <span class="item-text">Paylaş</span>
-              </button>
-              
-              <button (click)="duplicateSurvey(survey)" class="dropdown-item">
-                <span class="item-icon">📋</span>
-                <span class="item-text">Kopyala</span>
-              </button>
-              
-              <button (click)="toggleSurveyStatus(survey)" class="dropdown-item">
-                <span class="item-icon">{{ survey.isActive ? '⏸️' : '▶️' }}</span>
-                <span class="item-text">{{ survey.isActive ? 'Duraklat' : 'Aktifleştir' }}</span>
-              </button>
-              
-              <button (click)="exportSurvey(survey)" class="dropdown-item">
-                <span class="item-icon">📥</span>
-                <span class="item-text">Dışa Aktar</span>
-              </button>
-              
-              <div class="dropdown-divider"></div>
-              
-              <button (click)="confirmDelete(survey)" class="dropdown-item danger">
-                <span class="item-icon">🗑️</span>
-                <span class="item-text">Sil</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Response Stats (if any) -->
-        <div class="response-overview" *ngIf="getResponseCount(survey.id) > 0">
-          <div class="response-bar">
-            <div class="response-fill" [style.width.%]="getCompletionRate(survey.id)"></div>
-          </div>
-          <div class="response-text">
-            <span class="response-count">{{ getResponseCount(survey.id) }} yanıt alındı</span>
-            <span class="response-rate">%{{ getCompletionRate(survey.id) }} tamamlanma</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Empty State -->
-    <ng-template #emptySurveys>
-      <div class="empty-state">
-        <div class="empty-illustration">
-          <div class="empty-icon">📋</div>
-          <div class="empty-sparkles">✨</div>
         </div>
         
-        <div class="empty-content">
-          <h3 class="empty-title">İlk anketinizi oluşturun!</h3>
-          <p class="empty-description">
-            Kullanıcılarınızdan değerli geri bildirimler alın ve 
-            verilerle desteklenen kararlar alın.
-          </p>
-          
-          <div class="empty-actions">
-            <button class="btn-create-empty" (click)="navigateToCreate()">
-              <span class="btn-icon">🚀</span>
-              <span class="btn-text">İlk Anketimi Oluştur</span>
-            </button>
-            
-            <button class="btn-secondary-empty">
-              <span class="btn-icon">📖</span>
-              <span class="btn-text">Nasıl Başlarım?</span>
-            </button>
-          </div>
+        <div class="stats-bar" *ngIf="surveys.length > 0">
+            <div class="stat-item">
+                <span class="stat-number">{{ surveys.length }}</span>
+                <span class="stat-label">Toplam Anket</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number">{{ getActiveCount() }}</span>
+                <span class="stat-label">Aktif Anket</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number">{{ getTotalResponses() }}</span>
+                <span class="stat-label">Toplam Yanıt</span>
+            </div>
         </div>
-      </div>
-    </ng-template>
-  </div>
-
-  <!-- Success Toast -->
-  <div class="toast-container">
-    <div class="toast success" *ngIf="showSuccessMessage">
-      <div class="toast-content">
-        <span class="toast-icon">✅</span>
-        <span class="toast-message">{{ successMessage }}</span>
-      </div>
-      <button class="toast-close" (click)="showSuccessMessage = false">×</button>
     </div>
-  </div>
+
+    <div class="content-section">
+        <div class="surveys-grid" *ngIf="surveys.length > 0; else emptySurveys">
+            <div
+                *ngFor="let survey of surveys; trackBy: trackBySurvey"
+                class="survey-card"
+                [class.inactive]="!survey.isActive">
+                
+                <div class="card-header">
+                    <div class="survey-badge" [class.active]="survey.isActive">
+                        <span class="badge-icon">{{ survey.isActive ? '🟢' : '🔴' }}</span>
+                        <span class="badge-text">{{ survey.isActive ? 'Aktif' : 'Pasif' }}</span>
+                    </div>
+                    
+                    <div class="header-actions">
+                        <button 
+                            class="quick-action-btn delete" 
+                            (click)="confirmDelete(survey)"
+                            title="Hızlı Sil">
+                            <span class="btn-icon">🗑️</span>
+                        </button>
+                        
+                        <button 
+                            class="quick-action-btn menu" 
+                            (click)="toggleDropdown(survey.surveyId)"
+                            title="Menü">
+                            <span class="dots">⋮</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card-content">
+                    <h3 class="survey-title">{{ survey.title }}</h3>
+                    <p class="survey-description" *ngIf="survey.description">
+                        {{ survey.description }}
+                    </p>
+                    
+                    <div class="survey-stats">
+                        <div class="stat-chip">
+                            <span class="chip-icon">❓</span>
+                            <span class="chip-text">{{ survey.questionCount || 0 }} soru</span>
+                        </div>
+                        
+                        <div class="stat-chip" *ngIf="getResponseCount(survey.surveyId) > 0">
+                            <span class="chip-icon">💬</span>
+                            <span class="chip-text">{{ getResponseCount(survey.surveyId) }} yanıt</span>
+                        </div>
+                        
+                        <div class="stat-chip">
+                            <span class="chip-icon">📅</span>
+                            <span class="chip-text">{{ formatDate(survey.createdAt) }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-actions">
+                    <button 
+                        class="action-btn preview" 
+                        (click)="navigateToView(survey.surveyId)" 
+                        title="Anketi Önizle">
+                        <span class="btn-icon">🔗</span>
+                        <span class="btn-text">Önizle</span>
+                    </button>
+                    
+                    <button 
+                        class="action-btn edit" 
+                        (click)="navigateToEdit(survey.surveyId)" 
+                        title="Düzenle">
+                        <span class="btn-icon">✏️</span>
+                        <span class="btn-text">Düzenle</span>
+                    </button>
+                    
+                    <button 
+                        class="action-btn stats" 
+                        (click)="navigateToResults(survey.surveyId)" 
+                        title="İstatistikler">
+                        <span class="btn-icon">📊</span>
+                        <span class="btn-text">İstatistik</span>
+                    </button>
+                    
+                    <div class="action-dropdown" [class.open]="activeDropdown === survey.surveyId">
+                        <button 
+                            class="action-btn more" 
+                            (click)="toggleDropdown(survey.surveyId)"
+                            title="Daha Fazla Seçenek">
+                            <span class="btn-icon">⚙️</span>
+                            <span class="btn-text">Diğer</span>
+                        </button>
+                        
+                        <div class="dropdown-menu" [class.open]="activeDropdown === survey.surveyId">
+                            <button (click)="shareSurvey(survey)" class="dropdown-item">
+                                <span class="item-icon">🔗</span>
+                                <span class="item-text">Paylaş</span>
+                            </button>
+                            
+                            <button (click)="duplicateSurvey(survey)" class="dropdown-item">
+                                <span class="item-icon">📋</span>
+                                <span class="item-text">Kopyala</span>
+                            </button>
+                            
+                            <button (click)="toggleSurveyStatus(survey)" class="dropdown-item">
+                                <span class="item-icon">{{ survey.isActive ? '⏸️' : '▶️' }}</span>
+                                <span class="item-text">{{ survey.isActive ? 'Duraklat' : 'Aktifleştir' }}</span>
+                            </button>
+                            
+                            <button (click)="exportSurvey(survey)" class="dropdown-item">
+                                <span class="item-icon">📥</span>
+                                <span class="item-text">Dışa Aktar</span>
+                            </button>
+                            
+                            <div class="dropdown-divider"></div>
+                            
+                            <button (click)="confirmDelete(survey)" class="dropdown-item danger">
+                                <span class="item-icon">🗑️</span>
+                                <span class="item-text">Sil</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="response-overview" *ngIf="getResponseCount(survey.surveyId) > 0">
+                    <div class="response-bar">
+                        <div class="response-fill" [style.width.%]="getCompletionRate(survey.surveyId)"></div>
+                    </div>
+                    <div class="response-text">
+                        <span class="response-count">{{ getResponseCount(survey.surveyId) }} yanıt alındı</span>
+                        <span class="response-rate">%{{ getCompletionRate(survey.surveyId) }} tamamlanma</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <ng-template #emptySurveys>
+            <div class="empty-state">
+                <div class="empty-illustration">
+                    <div class="empty-icon">📋</div>
+                    <div class="empty-sparkles">✨</div>
+                </div>
+                
+                <div class="empty-content">
+                    <h3 class="empty-title">İlk anketinizi oluşturun!</h3>
+                    <p class="empty-description">
+                        Kullanıcılarınızdan değerli geri bildirimler alın ve 
+                        verilerle desteklenen kararlar alın.
+                    </p>
+                    
+                    <div class="empty-actions">
+                        <button class="btn-create-empty" (click)="navigateToCreate()">
+                            <span class="btn-icon">🚀</span>
+                            <span class="btn-text">İlk Anketimi Oluştur</span>
+                        </button>
+                        
+                        <button class="btn-secondary-empty">
+                            <span class="btn-icon">📖</span>
+                            <span class="btn-text">Nasıl Başlarım?</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </ng-template>
+    </div>
+
+    <div class="toast-container">
+        <div class="toast success" *ngIf="showSuccessMessage">
+            <div class="toast-content">
+                <span class="toast-icon">✅</span>
+                <span class="toast-message">{{ successMessage }}</span>
+            </div>
+            <button class="toast-close" (click)="showSuccessMessage = false">×</button>
+        </div>
+    </div>
 </div>
 
-<!-- Delete Confirmation Modal -->
 <div class="delete-confirmation-overlay" *ngIf="showDeleteModal">
-  <div class="delete-modal">
-    <span class="modal-icon">⚠️</span>
-    <h3 class="modal-title">Anketi Sil</h3>
-    <p class="modal-message">
-      "<strong>{{ surveyToDelete?.title }}</strong>" anketini silmek istediğinizden emin misiniz? 
-      <br>Bu işlem geri alınamaz ve tüm yanıtlar silinecektir.
-    </p>
-    <div class="modal-actions">
-      <button class="btn-cancel" (click)="cancelDelete()">İptal</button>
-      <button class="btn-delete" (click)="executeDelete()">Evet, Sil</button>
+    <div class="delete-modal">
+        <span class="modal-icon">⚠️</span>
+        <h3 class="modal-title">Anketi Sil</h3>
+        <p class="modal-message">
+            "<strong>{{ surveyToDelete?.title }}</strong>" anketini silmek istediğinizden emin misiniz? 
+            <br>Bu işlem geri alınamaz ve tüm yanıtlar silinecektir.
+        </p>
+        <div class="modal-actions">
+            <button class="btn-cancel" (click)="cancelDelete()">İptal</button>
+            <button class="btn-delete" (click)="executeDelete()">Evet, Sil</button>
+        </div>
     </div>
-  </div>
 </div>

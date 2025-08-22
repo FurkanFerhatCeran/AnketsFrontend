@@ -7,6 +7,11 @@ import { routes } from './app.routes';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
 import { ErrorInterceptor } from './interceptors/error.interceptor';
 
+
+
+import { MessageService } from 'primeng/api'; // Bu satırı ekleyin
+
+
 // Servisleri import et
 import { ApiService } from './services/api.service';
 import { QuestionService } from './services/question.service';
@@ -17,6 +22,7 @@ export const appConfig: ApplicationConfig = {
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
     provideClientHydration(),
+    MessageService, // Bu satırı ekleyin
     provideHttpClient(
       withFetch(),
       withInterceptors([authInterceptor])
