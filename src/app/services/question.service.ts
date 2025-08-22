@@ -3,45 +3,11 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { QuestionType } from '../models/question-type.model';
 import { ApiService } from './api.service';
-
-export interface QuestionOption {
-	optionId?: number;
-	optionText: string;
-	optionValue: string;
-	imageUrl?: string;
-	sortOrder?: number;
-	isOtherOption?: boolean;
-	conditionalLogic?: string;
-	createdAt?: Date;
-}
-
-export interface Question {
-	questionId?: number;
-	questionTitle: string;
-	questionDescription?: string;
-	surveyId: number;
-	questionTypeId: number;
-	isRequired: boolean;
-	conditionalLogic?: string;
-	validationRules?: any;
-	createdAt?: Date;
-	updatedAt?: Date;
-	options?: QuestionOption[];
-}
-
-export interface QuestionResponse {
-	questionId: number;
-	questionTitle: string;
-	questionDescription: string;
-	surveyId: number;
-	questionTypeId: number;
-	isRequired: boolean;
-	conditionalLogic: string;
-	validationRules: any;
-	createdAt: Date;
-	updatedAt: Date;
-	options: QuestionOption[];
-}
+import {
+	CreateQuestionRequest,
+	UpdateQuestionRequest,
+	QuestionResponse
+} from '../models/survey/question.model';
 
 @Injectable({
 	providedIn: 'root'
@@ -49,11 +15,11 @@ export interface QuestionResponse {
 export class QuestionService {
 	constructor(private apiService: ApiService) {}
 
-	createQuestion(question: Question): Observable<QuestionResponse> {
+	createQuestion(question: CreateQuestionRequest): Observable<QuestionResponse> {
 		return this.apiService.createQuestion(question);
 	}
 
-	updateQuestion(id: number, question: Question): Observable<QuestionResponse> {
+	updateQuestion(id: number, question: UpdateQuestionRequest): Observable<QuestionResponse> {
 		return this.apiService.updateQuestion(id, question);
 	}
 
