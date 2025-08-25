@@ -111,7 +111,9 @@ export class SurveyListComponent implements OnInit {
   }
 
   navigateToView(surveyId: number): void {
-    this.router.navigate(['/survey', surveyId]); // Anket önizleme sayfası
+    this.router.navigate(['/survey', surveyId], { 
+      queryParams: { preview: 'true' } 
+    });
   }
 
   navigateToResults(surveyId: number): void {

@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { QuestionType } from '../../../models/question-type.model';
 import { ApiService } from '../../../services/api.service';
+import { forkJoin, combineLatest } from 'rxjs';
 
 @Component({
   selector: 'app-survey-take',
@@ -21,6 +22,7 @@ export class SurveyTakeComponent implements OnInit {
   submitting = false;
   errors: number[] = [];
   isLoading = true;
+  isPreviewMode = false;
 
   constructor(
     private apiService: ApiService,
@@ -29,8 +31,13 @@ export class SurveyTakeComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    combineLatest([this.route.paramMap, this.route.queryParamMap]).subscribe(([params, query]) => {
+      const id = Number(params.get('id'));
+      this.isPreviewMode = query.get('preview') === 'true';
+      this.loadSurvey(id);
+    });
+
     this.loadQuestionTypes();
-    this.loadSurvey();
   }
 
   loadQuestionTypes(): void {
@@ -44,43 +51,32 @@ export class SurveyTakeComponent implements OnInit {
     });
   }
 
-  loadSurvey(): void {
-    const surveyId = this.route.snapshot.params['id'];
-    this.apiService.getSurveyById(surveyId).subscribe({
-      next: (survey) => {
-        this.survey = survey;
-        
-        // API'den gelen soruları işle ve uygun formata dönüştür
-        if (this.survey.questions) {
-          this.survey.questions.forEach((question: any) => {
-            // Seçenek gerektiren soru tipleri için options dizisini kontrol et
-            if ([3, 4, 5].includes(question.questionTypeId) && !question.options) {
-              question.options = [];
-            }
-            
-            // Başlangıç değerlerini ayarla
-            if (question.questionTypeId === 4) {
-              this.answers[question.questionId] = [];
-            }
-            
-            // Rating ve Scale için varsayılan değerler
-            if (question.questionTypeId === 9) {
-              this.answers[question.questionId] = null;
-            }
-            if (question.questionTypeId === 10) {
-              this.answers[question.questionId] = 5; // Ortalama değer
-            }
-          });
-        } else {
-          this.survey.questions = [];
-        }
-        
+  loadSurvey(surveyId: number): void {
+    this.isLoading = true;
+
+    forkJoin({
+      survey: this.apiService.getSurveyById(surveyId),
+      questions: this.apiService.getQuestionsBySurvey(surveyId)
+    }).subscribe({
+      next: ({ survey, questions }) => {
+        this.survey = survey || { questions: [] };
+        this.survey.questions = Array.isArray(questions) ? questions : [];
+
+        // Başlangıç değerleri
+        this.survey.questions.forEach((q: any) => {
+          if ([3, 4, 5].includes(q.questionTypeId) && !q.options) q.options = [];
+          if (q.questionTypeId === 4 && !this.answers[q.questionId]) this.answers[q.questionId] = [];
+          if (q.questionTypeId === 9 && this.answers[q.questionId] === undefined) this.answers[q.questionId] = null;
+          if (q.questionTypeId === 10 && this.answers[q.questionId] === undefined) this.answers[q.questionId] = 5;
+        });
+
         this.isLoading = false;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       },
-      error: (error) => {
-        console.error('Anket yüklenirken hata:', error);
+      error: (err) => {
+        console.error('Önizleme yüklenirken hata:', err);
+        this.survey = { questions: [] };
         this.isLoading = false;
-        alert('Anket yüklenirken bir hata oluştu. Lütfen daha sonra tekrar deneyin.');
       }
     });
   }
@@ -197,7 +193,12 @@ export class SurveyTakeComponent implements OnInit {
     }
   }
 
+  // Önizleme modunda form gönderimini engelle
   onSubmit(): void {
+    if (this.isPreviewMode) {
+      return; // Önizleme modunda form gönderimi yapılmaz
+    }
+
     if (!this.validateForm()) {
       alert('Lütfen zorunlu alanları doldurun.');
       this.scrollToFirstError();
@@ -257,9 +258,28 @@ export class SurveyTakeComponent implements OnInit {
     });
   }
 
+  // Önizleme modunda geri dönüş
   onBack(): void {
-    if (confirm('Anketteki ilerlemeniz kaybolacak. Emin misiniz?')) {
-      this.router.navigate(['/surveys']);
+    if (this.isPreviewMode) {
+      this.router.navigate(['/dashboard/surveys']);
+    } else {
+      if (confirm('Anketteki ilerlemeniz kaybolacak. Emin misiniz?')) {
+        this.router.navigate(['/surveys']);
+      }
+    }
+  }
+
+  // Önizleme modunda düzenleme sayfasına git
+  navigateToEdit(): void {
+    if (this.survey) {
+      this.router.navigate(['/dashboard/surveys/edit', this.survey.surveyId || this.survey.id]);
+    }
+  }
+
+  // Önizleme modunda anketi doldur sayfasına git
+  navigateToTake(): void {
+    if (this.survey) {
+      this.router.navigate(['/dashboard/surveys/take', this.survey.surveyId || this.survey.id]);
     }
   }
 }

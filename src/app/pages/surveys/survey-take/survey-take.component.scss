@@ -4,3 +4,292 @@
 /* TODO: Soru ve input stilleri */
 /* TODO: Navigasyon buton stilleri */
 /* TODO: Mobile-friendly tasarım */
+
+/* Debug bilgisi kaldırıldı */
+
+// Önizleme header stilleri
+.survey-viewer {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7ff 0%, #eef2ff 100%);
+  padding: 24px 0 64px;
+}
+
+.survey-header {
+  margin: 0 auto 24px;
+  max-width: 980px;
+  padding: 0 16px;
+}
+
+.preview-header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px 24px;
+  box-shadow: 0 8px 30px rgba(28, 35, 90, 0.08);
+  border: 1px solid #e8ecff;
+  
+  .header-text {
+    .main-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 0 0 6px;
+      font-weight: 800;
+      font-size: 26px;
+      letter-spacing: -0.02em;
+      color: #1f2a44;
+
+      .title-icon {
+        font-size: 22px;
+      }
+    }
+
+    .subtitle {
+      margin: 0;
+      color: #6b7487;
+      font-size: 14px;
+    }
+  }
+  
+  .header-actions {
+    display: flex;
+    gap: 10px;
+  }
+
+  .btn-secondary,
+  .btn-edit,
+  .btn-take {
+    appearance: none;
+    border: 0;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: transform .08s ease, box-shadow .2s ease, background .2s ease;
+
+    &:active { transform: translateY(1px); }
+  }
+
+  .btn-secondary {
+    background: #eef2ff;
+    color: #2b3a67;
+    box-shadow: 0 2px 0 #cfd8ff inset;
+
+    &:hover { background: #e5ebff; }
+  }
+
+  .btn-edit {
+    background: #3b82f6;
+    color: #fff;
+    box-shadow: 0 2px 0 rgba(20, 80, 200, .4) inset;
+
+    &:hover { background: #2563eb; }
+  }
+
+  .btn-take {
+    background: #22c55e;
+    color: #fff;
+    box-shadow: 0 2px 0 rgba(0, 135, 60, .35) inset;
+
+    &:hover { background: #16a34a; }
+  }
+}
+
+// Önizleme soru kartları
+.questions-container {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 0 16px;
+  
+  .question-card {
+    background: #ffffff;
+    border: 1px solid #e8ecff;
+    border-radius: 16px;
+    box-shadow: 0 10px 32px rgba(28, 35, 90, 0.06);
+    padding: 18px 18px 14px;
+    margin: 14px 0;
+    
+    .question-header {
+      margin-bottom: 1rem;
+      
+      .question-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0 0 6px;
+        font-weight: 800;
+        font-size: 16px;
+        color: #1f2a44;
+
+        .question-number {
+          width: 28px;
+          height: 28px;
+          border-radius: 999px;
+          background: #e8efff;
+          color: #2947c7;
+          font-size: 14px;
+          font-weight: 800;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .required-mark { color: #ef4444; }
+      }
+
+      .question-description {
+        margin: 0;
+        color: #6b7487;
+        font-size: 13px;
+        line-height: 1.5;
+      }
+    }
+  }
+}
+
+// Önizleme input stilleri
+.question-preview {
+  .preview-input {
+    input, textarea, select {
+      width: 100%;
+      border: 2px solid #eef2ff;
+      background: #f8faff;
+      border-radius: 12px;
+      padding: 12px 12px;
+      font-size: 14px;
+      color: #2b3a67;
+      transition: border-color .15s ease, background .15s ease;
+
+      &::placeholder { color: #9aa3b2; }
+
+      &:hover { background: #f5f8ff; }
+
+      &:focus {
+        outline: none;
+        border-color: #3b82f6;
+        background: #fff;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, .12);
+      }
+    }
+    
+    textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+  }
+  
+  .preview-options .preview-option {
+    padding: 8px 10px;
+    border-radius: 8px;
+
+    label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #2b3a67;
+      cursor: default;
+    }
+  }
+  
+  .preview-rating {
+    text-align: center;
+    .rating-scale {
+      margin-bottom: 8px;
+      .rating-star { font-size: 22px; opacity: .35; margin: 0 3px; }
+    }
+    .rating-labels {
+      color: #6b7487;
+      font-size: 12px;
+      display: flex;
+      justify-content: space-between;
+      padding: 0 4px;
+    }
+  }
+  
+  .preview-scale {
+    text-align: center;
+    
+    input[type="range"] {
+      width: 100%;
+      margin: 1rem 0;
+    }
+    
+    .scale-value {
+      color: #4299e1;
+      font-weight: 600;
+    }
+  }
+  
+  .preview-file .file-upload-preview {
+    border: 2px dashed #d9e1ff;
+    background: #f8faff;
+    border-radius: 12px;
+    padding: 18px;
+    text-align: center;
+    color: #2b3a67;
+  }
+  
+  .preview-info, .preview-title {
+    background: #ebf8ff;
+    border: 1px solid #bee3f8;
+    border-radius: 8px;
+    padding: 1rem;
+    
+    .info-icon {
+      font-size: 1.5rem;
+      margin-right: 0.5rem;
+    }
+    
+    h4 {
+      color: #2b6cb0;
+      margin: 0 0 0.5rem;
+    }
+    
+    p {
+      color: #4a5568;
+      margin: 0;
+      line-height: 1.5;
+    }
+  }
+}
+
+// Soru bulunamadığında mesaj
+.no-questions {
+  padding: 48px 0;
+  text-align: center;
+
+  .no-questions-content {
+    max-width: 520px;
+    margin: 0 auto;
+    background: #fff;
+    border: 1px solid #e8ecff;
+    border-radius: 16px;
+    padding: 24px 18px;
+    box-shadow: 0 8px 30px rgba(28, 35, 90, 0.06);
+
+    .no-questions-icon {
+      font-size: 44px;
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    h3 { margin: 8px 0 6px; color: #1f2a44; font-size: 18px; }
+    p { margin: 0; color: #6b7487; font-size: 13px; }
+  }
+}
+
+// Responsive tasarım
+@media (max-width: 768px) {
+  .preview-header-content { flex-direction: column; align-items: flex-start; }
+  .header-actions { width: 100%; display: flex; justify-content: flex-start; flex-wrap: wrap; }
+  .questions-container { padding: 0 1rem; }
+  .question-card { padding: 16px; }
+  .preview-header-content .header-text .main-title { font-size: 2rem; }
+}

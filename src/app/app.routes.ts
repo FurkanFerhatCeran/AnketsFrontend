@@ -50,6 +50,9 @@ export const routes: Routes = [
   // Ancak uygulamanızda login sonrası erişim olduğu için bu yolları kaldırmak daha iyi.
   // { path: 'public/surveys/take/:id', component: SurveyTakeComponent },
 
+  // Public anket önizleme (login gerektirmeyen)
+  { path: 'survey/:id', component: SurveyTakeComponent },
+
   // ** En sona eklenmeli! **
   // Tanımlanan yollar dışında kalan tüm istekleri 404 sayfasına yönlendirir
   { path: '**', component: NotFoundComponent }

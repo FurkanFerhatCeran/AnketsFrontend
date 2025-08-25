@@ -1,6 +1,39 @@
 <!-- src/app/pages/surveys/survey-take/survey-take.component.html -->
 <div class="survey-viewer">
-  <div class="survey-header">
+  <!-- Debug bilgisi kaldırıldı -->
+
+  <!-- Önizleme modunda header -->
+  <div class="survey-header" *ngIf="isPreviewMode">
+    <div class="preview-header-content">
+      <div class="header-text">
+        <h1 class="main-title">
+          <span class="title-icon">👁️</span>
+          Anket Önizlemesi
+        </h1>
+        <p class="subtitle">Anketinizin nasıl görüneceğini kontrol edin</p>
+      </div>
+      
+      <div class="header-actions">
+        <button class="btn-secondary" (click)="onBack()">
+          <span class="btn-icon">←</span>
+          Geri Dön
+        </button>
+        
+        <button class="btn-edit" (click)="navigateToEdit()">
+          <span class="btn-icon">✏️</span>
+          Düzenle
+        </button>
+        
+        <button class="btn-take" (click)="navigateToTake()">
+          <span class="btn-icon">📝</span>
+          Anketi Doldur
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Normal anket header -->
+  <div class="survey-header" *ngIf="!isPreviewMode">
     <h1>{{ survey.title }}</h1>
     <p *ngIf="survey.description" class="survey-description">
       {{ survey.description }}
@@ -18,7 +51,148 @@
     <p>Anket yükleniyor...</p>
   </div>
 
-  <form class="survey-form" (ngSubmit)="onSubmit()" #surveyForm="ngForm" *ngIf="!isLoading">
+  <!-- Önizleme modunda form olmadan göster -->
+  <div class="questions-container" *ngIf="!isLoading && isPreviewMode && survey.questions && survey.questions.length > 0">
+    <div
+      *ngFor="let question of survey.questions; let i = index"
+      class="question-card">
+      
+      <div class="question-header">
+        <h3 class="question-title">
+          <span class="question-number">{{ i + 1 }}.</span>
+          {{ question.questionTitle }}
+          <span class="required-mark" *ngIf="question.isRequired">*</span>
+        </h3>
+        <p *ngIf="question.questionDescription" class="question-description">
+          {{ question.questionDescription }}
+        </p>
+      </div>
+
+      <div class="question-preview">
+        <ng-container [ngSwitch]="question.questionTypeId">
+          
+          <!-- Kısa Metin (1) -->
+          <div *ngSwitchCase="1" class="preview-input">
+            <input type="text" placeholder="Cevap örneği..." disabled>
+          </div>
+
+          <!-- Uzun Metin (2) -->
+          <div *ngSwitchCase="2" class="preview-input">
+            <textarea placeholder="Uzun cevap örneği..." rows="3" disabled></textarea>
+          </div>
+
+          <!-- Tekil Seçim - Radio (3) -->
+          <div *ngSwitchCase="3" class="preview-options">
+            <div *ngFor="let option of question.options" class="preview-option">
+              <label class="preview-radio">
+                <input type="radio" disabled>
+                <span class="radio-text">{{ option.optionText }}</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Çoklu Seçim - Checkbox (4) -->
+          <div *ngSwitchCase="4" class="preview-options">
+            <div *ngFor="let option of question.options" class="preview-option">
+              <label class="preview-checkbox">
+                <input type="checkbox" disabled>
+                <span class="checkbox-text">{{ option.optionText }}</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Dropdown (5) -->
+          <div *ngSwitchCase="5" class="preview-input">
+            <select disabled>
+              <option>Seçiniz...</option>
+              <option *ngFor="let option of question.options" [value]="option.optionValue">
+                {{ option.optionText }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Sayı (6) -->
+          <div *ngSwitchCase="6" class="preview-input">
+            <input type="number" placeholder="0" disabled>
+          </div>
+
+          <!-- Tarih (7) -->
+          <div *ngSwitchCase="7" class="preview-input">
+            <input type="date" disabled>
+          </div>
+
+          <!-- Saat (8) -->
+          <div *ngSwitchCase="8" class="preview-input">
+            <input type="time" disabled>
+          </div>
+
+          <!-- Rating (9) -->
+          <div *ngSwitchCase="9" class="preview-rating">
+            <div class="rating-scale">
+              <span *ngFor="let rating of [1,2,3,4,5]" class="rating-star">⭐</span>
+            </div>
+            <div class="rating-labels">
+              <span>1 (Kötü)</span>
+              <span>5 (Mükemmel)</span>
+            </div>
+          </div>
+
+          <!-- Scale (10) -->
+          <div *ngSwitchCase="10" class="preview-scale">
+            <input type="range" min="1" max="10" value="5" disabled>
+            <div class="scale-value">Seçilen değer: 5</div>
+          </div>
+
+          <!-- Email (11) -->
+          <div *ngSwitchCase="11" class="preview-input">
+            <input type="email" placeholder="email@example.com" disabled>
+          </div>
+
+          <!-- Telefon (12) -->
+          <div *ngSwitchCase="12" class="preview-input">
+            <input type="tel" placeholder="05XX XXX XX XX" disabled>
+          </div>
+
+          <!-- Dosya Yükleme (13) -->
+          <div *ngSwitchCase="13" class="preview-file">
+            <div class="file-upload-preview">
+              <span class="file-icon">📎</span>
+              <span class="file-text">Dosya seçin</span>
+            </div>
+            <div class="file-hint">PDF, DOC, DOCX, JPG, PNG (max 5MB)</div>
+          </div>
+
+          <!-- Bilgi Mesajı (14) -->
+          <div *ngSwitchCase="14" class="preview-info">
+            <div class="info-icon">ℹ️</div>
+            <div class="info-content">
+              <h4>Bilgilendirme</h4>
+              <p>{{ question.questionDescription || 'Bu bir bilgilendirme mesajıdır.' }}</p>
+            </div>
+          </div>
+
+          <!-- Başlık (15) -->
+          <div *ngSwitchCase="15" class="preview-title">
+            <h4>{{ question.questionTitle }}</h4>
+            <p *ngIf="question.questionDescription">{{ question.questionDescription }}</p>
+          </div>
+
+        </ng-container>
+      </div>
+    </div>
+  </div>
+
+  <!-- Soru bulunamadığında mesaj -->
+  <div *ngIf="!isLoading && isPreviewMode && (!survey.questions || survey.questions.length === 0)" class="no-questions">
+    <div class="no-questions-content">
+      <span class="no-questions-icon">❓</span>
+      <h3>Henüz soru eklenmemiş</h3>
+      <p>Bu ankette henüz soru bulunmuyor. Düzenle butonuna tıklayarak soru ekleyebilirsiniz.</p>
+    </div>
+  </div>
+
+  <!-- Normal form (önizleme modunda değil) -->
+  <form class="survey-form" (ngSubmit)="onSubmit()" #surveyForm="ngForm" *ngIf="!isLoading && !isPreviewMode">
     <div class="questions-container">
       <div
         *ngFor="let question of survey.questions; let i = index"
