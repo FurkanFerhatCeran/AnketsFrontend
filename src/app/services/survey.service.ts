@@ -36,7 +36,6 @@ export class SurveyService {
                 }
                 
                 return surveys.map((surveyDto: any) => {
-                    // Backend DTO'daki adları frontend modeline dönüştürüyoruz
                     const survey: Survey = {
                         surveyId: surveyDto.surveyId,
                         title: surveyDto.title || 'Başlıksız Anket',
@@ -64,7 +63,7 @@ export class SurveyService {
     getSurveyById(id: number): Observable<Survey | null> {
         console.log('🔍 Getting survey by ID:', id);
         
-        const localSurvey = this.surveysSubject.value.find(s => s.surveyId === id); // `id` yerine `surveyId` kullanıyoruz
+        const localSurvey = this.surveysSubject.value.find(s => s.surveyId === id);
         if (localSurvey) {
             console.log('✅ Found survey locally:', localSurvey.title);
             return of(localSurvey);
@@ -75,7 +74,7 @@ export class SurveyService {
                 if (!survey) return null;
                 
                 return {
-                    surveyId: survey.surveyId, // `id` yerine `surveyId` kullanıyoruz
+                    surveyId: survey.surveyId,
                     title: survey.title,
                     description: survey.description,
                     questions: survey.questions || [],
@@ -177,7 +176,7 @@ export class SurveyService {
         return this.apiService.getSurveyStatistics(surveyId).pipe(
             map((stats: any) => ({
                 survey: {
-                    surveyId: stats.survey.surveyId, // `id` yerine `surveyId` kullanıyoruz
+                    surveyId: stats.survey.surveyId,
                     title: stats.survey.title,
                     description: stats.survey.description,
                     questions: stats.survey.questions || [],
@@ -225,9 +224,30 @@ export class SurveyService {
         );
     }
 
-    getResponsesCount(): Observable<number> {
+    // Eksik metodları ekliyoruz
+    getActiveSurveyCount(): Observable<number> {
+        return this.surveysSubject.asObservable().pipe(
+            map(surveys => surveys.filter(survey => survey.isActive).length)
+        );
+    }
+
+    getTotalResponses(): Observable<number> {
         return this.responsesSubject.asObservable().pipe(
             map(responses => responses.length)
+        );
+    }
+
+    getResponseRate(): Observable<number> {
+        return this.surveysSubject.asObservable().pipe(
+            map(surveys => {
+                if (surveys.length === 0) return 0;
+                
+                const totalSurveys = surveys.length;
+                const totalResponses = this.responsesSubject.value.length;
+                
+                // Basit bir hesaplama: her anket için ortalama yanıt oranı
+                return totalSurveys > 0 ? Math.round((totalResponses / totalSurveys) * 100) : 0;
+            })
         );
     }
 
@@ -240,6 +260,28 @@ export class SurveyService {
     }
 
     getSurveyByIdSync(id: number): Survey | undefined {
-        return this.surveysSubject.value.find(survey => survey.surveyId === id); // `id` yerine `surveyId` kullanıyoruz
+        return this.surveysSubject.value.find(survey => survey.surveyId === id);
     }
+
+    // Yanıtları yüklemek için bir metod ekleyelim
+// Yanıtları yüklemek için bir metod ekleyelim
+loadResponses(surveyId: number): void {
+    this.apiService.getSurveyResponses(surveyId).pipe(
+        map((responses: any[]) => {
+            return responses.map(response => ({
+                id: response.id,
+                surveyId: response.surveyId,
+                answers: response.answers,
+                submittedAt: new Date(response.submittedAt),
+                respondentName: response.respondentName
+            }));
+        }),
+        catchError(error => {
+            console.error('❌ Error loading responses:', error);
+            return of([]);
+        })
+    ).subscribe(responses => {
+        this.responsesSubject.next(responses);
+    });
+}
 }

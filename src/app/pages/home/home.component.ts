@@ -1,9 +1,11 @@
+// src/app/pages/home/home.component.ts
+import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
-import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
-import { CommonModule } from '@angular/common';
+import { SurveyService } from '../../services/survey.service';
 
 @Component({
   selector: 'app-home',
@@ -14,14 +16,23 @@ import { CommonModule } from '@angular/common';
 })
 export class HomeComponent implements OnInit {
   userName: string = 'Kullanıcı';
+  surveyCount: number = 0;
+  activeSurveyCount: number = 0;
+  totalResponses: number = 0;
+  responseRate: number = 0;
 
   constructor(
     private router: Router,
-    private authService: AuthService
+    private authService: AuthService,
+    private surveyService: SurveyService
   ) { }
 
   ngOnInit(): void {
-    // Kullanıcı adını al
+    this.loadUserData();
+    this.loadSurveyStats();
+  }
+
+  private loadUserData(): void {
     const currentUser = this.authService.getCurrentUser();
     if (currentUser) {
       if (currentUser.nameSurname) {
@@ -29,12 +40,29 @@ export class HomeComponent implements OnInit {
       } else if (currentUser.username) {
         this.userName = currentUser.username;
       } else if (currentUser.email) {
-        // Email'den isim çıkar
         this.userName = this.extractNameFromEmail(currentUser.email);
       }
     }
   }
 
+private loadSurveyStats(): void {
+    // Anket istatistiklerini yükle
+    this.surveyService.getSurveyCount().subscribe((count: number) => {
+        this.surveyCount = count;
+    });
+
+    this.surveyService.getActiveSurveyCount().subscribe((count: number) => {
+        this.activeSurveyCount = count;
+    });
+
+    this.surveyService.getTotalResponses().subscribe((responses: number) => {
+        this.totalResponses = responses;
+    });
+
+    this.surveyService.getResponseRate().subscribe((rate: number) => {
+        this.responseRate = rate;
+    });
+}
   selectTemplate(templateType: string): void {
     this.router.navigate(['/dashboard/surveys/create'], { 
       state: { template: templateType } 

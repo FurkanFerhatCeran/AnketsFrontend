@@ -10,6 +10,8 @@ import { DashboardComponent } from './pages/dashboard/dashboard.component';
 import { NotFoundComponent } from './pages/NotFound/not-found.component';
 import { ProfileComponent } from './pages/profile/profile.component';
 
+
+import { HomeComponent } from './pages/home/home.component';
 // Anket sayfalarını import ediyoruz
 import { SurveyCreateComponent } from './pages/surveys/survey-create/survey-create.component';
 import { SurveyEditComponent } from './pages/surveys/survey-edit/survey-edit.component';
@@ -30,6 +32,8 @@ export const routes: Routes = [
     component: DashboardComponent,
     canActivate: [AuthGuard],
     children: [
+        { path: '', redirectTo: 'home', pathMatch: 'full' }, // Dashboard ana sayfa olarak home'u göster
+      { path: 'home', component: HomeComponent }, // ← Home route'u ekleyin
       { path: '', redirectTo: 'surveys', pathMatch: 'full' }, // Dashboard ana sayfa olarak anketleri göster
       { path: 'profile', component: ProfileComponent },
       

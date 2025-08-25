@@ -59,7 +59,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   // Menü öğeleri
   menuItems = [
-    { name: 'Anasayfa', icon: 'home', route: '/home', exact: true },
+    { name: 'Anasayfa', icon: 'home', route: '/dashboard/home', exact: true },
     { name: 'Anketlerim', icon: 'assignment', route: '/dashboard/surveys', badge: 0 },
     { name: 'Yeni Anket', icon: 'add_circle', route: '/dashboard/surveys/create' },
     { name: 'Analizler', icon: 'analytics', route: '/dashboard/analytics' },
