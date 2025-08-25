@@ -40,7 +40,6 @@ export class LoginComponent {
     
     const loginDto: LoginRequest = this.loginForm.value;
     
-    // 🔥 GERÇEK API ÇAĞRISI - Backend DTO yapısına göre
     this.authService.login(loginDto).subscribe({
       next: (response: LoginResponse) => {
         console.log('✅ Giriş başarılı:', response);
@@ -53,30 +52,17 @@ export class LoginComponent {
     });
   }
 
-  // 🔥 Backend LoginResponseDto yapısına göre güncellendi
   private handleLoginSuccess(response: LoginResponse): void {
     this.isLoading = false;
     
-    console.log('🔐 Token kaydediliyor:', response.token); // ✅ token property'si
-    console.log('👤 Kullanıcı bilgileri:', {
-      userId: response.userId,
-      username: response.username,
-      email: response.email
-    });
+    console.log('🔐 Token kaydediliyor:', response.token);
+    console.log('👤 Kullanıcı bilgileri:', response.user);
     
     // AuthService zaten otomatik olarak token ve user verilerini kaydedecek
-    // Ama ekstra kontrol için:
-    if (response.token) {
-      // Token'ı manuel kaydet (AuthService'de zaten kaydediliyor ama emin olmak için)
+    // Ekstra kontrol için manuel kaydetme
+    if (response.token && response.user) {
       localStorage.setItem('accessToken', response.token);
-      
-      // User verisini manuel kaydet
-      const userData = {
-        userId: response.userId,
-        username: response.username,
-        email: response.email
-      };
-      localStorage.setItem('userData', JSON.stringify(userData));
+      localStorage.setItem('userData', JSON.stringify(response.user));
     }
     
     // Success animation
@@ -99,6 +85,9 @@ export class LoginComponent {
     } else if (err?.error?.message) {
       // HTTP error response'dan mesaj al
       this.errorMessage = this.translateErrorMessage(err.error.message);
+    } else if (err?.error) {
+      // Error objesi içindeki mesaj
+      this.errorMessage = this.translateErrorMessage(err.error);
     } else if (typeof err === 'string') {
       this.errorMessage = this.translateErrorMessage(err);
     } else {
@@ -158,20 +147,12 @@ export class LoginComponent {
     event.preventDefault();
     console.log('🔄 Şifre sıfırlama işlemi başlatılıyor...');
     
-    // TODO: Forgot password sayfasına yönlendir veya modal aç
-    // this.router.navigate(['/forgot-password']);
-    
-    // Geçici olarak alert göster
-    alert('Şifre sıfırlama özelliği yakında eklenecek.');
+    // Şifre sıfırlama sayfasına yönlendir
+    this.router.navigate(['/auth/forgot-password']);
   }
 
   socialLogin(provider: string): void {
     console.log(`🔗 ${provider} ile giriş yapılıyor...`);
-    
-    // TODO: Social login implementasyonu
-    // this.authService.socialLogin(provider).subscribe(...);
-    
-    // Geçici olarak alert göster  
     alert(`${provider} ile giriş özelliği yakında eklenecek.`);
   }
 

@@ -1,0 +1,72 @@
+<div class="home-container">
+  <div class="welcome-section">
+    <h1>Hoş Geldiniz, {{userName}}!</h1>
+    <p>Anket oluşturmaya başlamak için bir şablon seçin veya boş bir anket oluşturun</p>
+  </div>
+
+  <div class="templates-section">
+    <h2>Hazır Şablonlar</h2>
+    <div class="templates-grid">
+      <!-- Müşteri Memnuniyeti Anketi -->
+      <div class="template-card" (click)="selectTemplate('customer_satisfaction')">
+        <div class="template-icon">
+          <mat-icon>sentiment_satisfied_alt</mat-icon>
+        </div>
+        <h3>Müşteri Memnuniyeti</h3>
+        <p>Müşterilerinizin deneyimlerini ölçün</p>
+        <div class="template-badge">Popüler</div>
+      </div>
+
+      <!-- Ürün Değerlendirme Anketi -->
+      <div class="template-card" (click)="selectTemplate('product_feedback')">
+        <div class="template-icon">
+          <mat-icon>inventory_2</mat-icon>
+        </div>
+        <h3>Ürün Değerlendirme</h3>
+        <p>Ürünleriniz hakkında geri bildirim toplayın</p>
+      </div>
+
+      <!-- Pazar Araştırması Anketi -->
+      <div class="template-card" (click)="selectTemplate('market_research')">
+        <div class="template-icon">
+          <mat-icon>trending_up</mat-icon>
+        </div>
+        <h3>Pazar Araştırması</h3>
+        <p>Pazar trendlerini ve tüketici tercihlerini analiz edin</p>
+      </div>
+
+      <!-- Etkinlik Değerlendirme Anketi -->
+      <div class="template-card" (click)="selectTemplate('event_feedback')">
+        <div class="template-icon">
+          <mat-icon>event</mat-icon>
+        </div>
+        <h3>Etkinlik Değerlendirme</h3>
+        <p>Düzenlediğiniz etkinlikler hakkında geri bildirim alın</p>
+      </div>
+
+      <!-- Çalışan Memnuniyeti Anketi -->
+      <div class="template-card" (click)="selectTemplate('employee_satisfaction')">
+        <div class="template-icon">
+          <mat-icon>groups</mat-icon>
+        </div>
+        <h3>Çalışan Memnuniyeti</h3>
+        <p>Çalışanlarınızın işyeri memnuniyetini ölçün</p>
+      </div>
+
+      <!-- Eğitim Değerlendirme Anketi -->
+      <div class="template-card" (click)="selectTemplate('training_evaluation')">
+        <div class="template-icon">
+          <mat-icon>school</mat-icon>
+        </div>
+        <h3>Eğitim Değerlendirme</h3>
+        <p>Verdiğiniz eğitimlerin etkinliğini ölçün</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="actions-section">
+    <button mat-raised-button color="primary" routerLink="/dashboard/surveys/create">
+      <mat-icon>add</mat-icon> Boş Anket Oluştur
+    </button>
+  </div>
+</div>

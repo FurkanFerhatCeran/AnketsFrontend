@@ -1,6 +1,4 @@
 // src/app/pages/dashboard/dashboard.component.ts
-// Dashboard bileşeninin düzeltilmiş ve güncellenmiş TypeScript kodu
-
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnDestroy, OnInit } from '@angular/core';
@@ -48,7 +46,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   protected router = inject(Router);
   private destroy$ = new Subject<void>();
 
-  currentUser: any; // Backend'den gelen user data: {userId, username, email}
+  currentUser: any = null; // Başlangıç değeri null
   isMenuOpen = true;
   notificationCount = 0;
 
@@ -61,7 +59,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   // Menü öğeleri
   menuItems = [
-    { name: 'Anasayfa', icon: 'home', route: '/dashboard', exact: true },
+    { name: 'Anasayfa', icon: 'home', route: '/home', exact: true },
     { name: 'Anketlerim', icon: 'assignment', route: '/dashboard/surveys', badge: 0 },
     { name: 'Yeni Anket', icon: 'add_circle', route: '/dashboard/surveys/create' },
     { name: 'Analizler', icon: 'analytics', route: '/dashboard/analytics' },
@@ -71,14 +69,45 @@ export class DashboardComponent implements OnInit, OnDestroy {
   ];
 
   ngOnInit(): void {
-    // 🔥 Backend'den gelen user data yapısına göre
-    this.currentUser = this.authService.getUserData(); 
+    console.log('🏁 Dashboard component initialized');
+    
+    // 🔥 ÖNEMLİ: AuthService'in currentUser$ observable'ını dinle
+    this.authService.currentUser$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(user => {
+        console.log('👤 Current user from observable:', user);
+        this.currentUser = user;
+        
+        if (!this.currentUser) {
+          // Eğer observable'dan user gelmezse, doğrudan servisten al
+          this.currentUser = this.authService.getCurrentUser();
+          console.log('👤 Current user from getCurrentUser():', this.currentUser);
+        }
+      });
+
+    // İlk değeri manuel olarak al
+    this.currentUser = this.authService.getCurrentUser();
     console.log('📊 Dashboard - Current user:', this.currentUser);
     
     if (!this.currentUser) {
-      console.warn('❌ Kullanıcı verisi bulunamadı, login\'e yönlendiriliyor');
-      this.router.navigate(['/login']);
-      return;
+      console.warn('❌ Kullanıcı verisi bulunamadı, localStorage kontrol ediliyor...');
+      
+      // localStorage'dan doğrudan kontrol et
+      try {
+        const userDataStr = localStorage.getItem('userData');
+        if (userDataStr) {
+          this.currentUser = JSON.parse(userDataStr);
+          console.log('📦 User data from localStorage:', this.currentUser);
+        }
+      } catch (error) {
+        console.error('❌ Error parsing userData from localStorage:', error);
+      }
+      
+      if (!this.currentUser) {
+        console.warn('❌ Kullanıcı verisi bulunamadı, login\'e yönlendiriliyor');
+        this.router.navigate(['/login']);
+        return;
+      }
     }
 
     // Anket sayısını alma
@@ -119,7 +148,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
   
   // Email'den isim çıkarma ve initials oluşturma
   getInitials(): string {
+    if (!this.currentUser) return 'K'; // Varsayılan değer
+    
     const displayName = this.getUserDisplayName();
+    
+    if (!displayName || displayName === 'Kullanıcı') return 'K';
     
     if (displayName.includes(' ')) {
       // İsim ve soyisim varsa ilk harflerini al
@@ -134,11 +167,21 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  // 🔥 PUBLIC - Email'den kullanıcı ismini çıkar veya username kullan
+  // 🔥 PUBLIC - Kullanıcı adını göster - öncelikle isim soyisim, yoksa username, yoksa email
   getUserDisplayName(): string {
     if (!this.currentUser) return 'Kullanıcı';
     
-    // Önce email'den isim çıkarmaya çalış
+    // Önce nameSurname alanına bak
+    if (this.currentUser.nameSurname && this.currentUser.nameSurname.trim() !== '') {
+      return this.currentUser.nameSurname;
+    }
+    
+    // Sonra username'e bak
+    if (this.currentUser.username && this.currentUser.username.trim() !== '') {
+      return this.capitalizeString(this.currentUser.username);
+    }
+    
+    // Email'den isim çıkarmaya çalış
     if (this.currentUser.email) {
       const emailName = this.extractNameFromEmail(this.currentUser.email);
       if (emailName && emailName !== 'user') {
@@ -146,9 +189,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       }
     }
     
-    // Email'den çıkaramazsa username'i kullan
-    const username = this.currentUser.username || 'kullanici';
-    return this.capitalizeString(username);
+    return 'Kullanıcı';
   }
 
   // 🔥 PUBLIC - Gerçek kullanıcı email'ini döndür

@@ -6,12 +6,23 @@ export interface LoginRequest {
 
 // 🔥 Backend LoginResponseDto - Bu 4 field kesin var
 export interface LoginResponse {
-    userId: number;
-    username: string;
-    email: string;
+    success: boolean;
+    message: string;
     token: string;
+    expiresAt: string;
+    user: {
+        userId: number;
+        username: string;
+        email: string;
+        nameSurname: string;
+        avatarUrl: string | null;
+        isActive: boolean;
+        createdAt: string;
+        updatedAt: string;
+        roleId: number;
+        roleName: string;
+    };
 }
-
 // Register
 export interface RegisterRequest {
     username: string;
@@ -22,9 +33,14 @@ export interface RegisterRequest {
 
 // 🔥 Backend RegisterResponseDto - Bu 3 field kesin var
 export interface RegisterResponse {
-    userId: number;
-    username: string;
-    email: string;
+    success: boolean;
+    message: string;
+    user?: {
+        userId: number;
+        username: string;
+        email: string;
+        nameSurname: string;
+    };
 }
 
 // Logout
@@ -66,4 +82,17 @@ export interface ApiErrorResponse {
     success: false;
     message: string;
     errors?: any;
+}
+// User interface (yeniden kullanılabilir)
+export interface User {
+    userId: number;
+    username: string;
+    email: string;
+    nameSurname: string;
+    avatarUrl: string | null;
+    isActive: boolean;
+    createdAt: string;
+    updatedAt: string;
+    roleId: number;
+    roleName: string;
 }

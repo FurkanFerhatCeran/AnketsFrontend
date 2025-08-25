@@ -1,16 +1,17 @@
-import { Injectable, PLATFORM_ID, Inject } from '@angular/core';
-import { Observable, BehaviorSubject, throwError } from 'rxjs';
-import { tap, catchError } from 'rxjs/operators';
 import { isPlatformBrowser } from '@angular/common';
-import { 
-  LoginRequest, 
-  LoginResponse, 
-  RegisterRequest, 
-  RegisterResponse, 
-  LogoutRequest, 
-  LogoutResponse,
+import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
+import { BehaviorSubject, Observable, throwError } from 'rxjs';
+import { catchError, tap } from 'rxjs/operators';
+import {
   ForgotPasswordResponse,
-  ResetPasswordResponse 
+  LoginRequest,
+  LoginResponse,
+  LogoutRequest,
+  LogoutResponse,
+  RegisterRequest,
+  RegisterResponse,
+  ResetPasswordResponse,
+  User
 } from '../models/auth/auth.models';
 import { ApiService } from './api.service';
 
@@ -23,7 +24,7 @@ export class AuthService {
   private isBrowser: boolean;
 
   // Kullanıcı durumu için BehaviorSubject
-  private currentUserSubject = new BehaviorSubject<any>(null);
+  private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
 
   constructor(
@@ -43,20 +44,18 @@ export class AuthService {
     this.checkAuthState();
   }
 
-  // 🔥 Giriş işlemi - LoginResponseDto yapısına göre
+  // 🔥 Giriş işlemi
   login(payload: LoginRequest): Observable<LoginResponse> {
     return this.apiService.login(payload)
       .pipe(
         tap((response: LoginResponse) => {
           console.log('✅ Login response:', response);
           
-          // Backend'den LoginResponseDto geldiği için success kontrolü yok
-          // Sadece token var mı kontrol edelim
-          if (response.token) {
+          if (response.token && response.user) {
             this.saveAuthData(response);
           } else {
-            console.error('❌ Login response\'da token yok:', response);
-            throw new Error('Token alınamadı');
+            console.error('❌ Login response\'da token veya user bilgisi yok:', response);
+            throw new Error('Token veya kullanıcı bilgisi alınamadı');
           }
         }),
         catchError(error => {
@@ -66,14 +65,12 @@ export class AuthService {
       );
   }
 
-  // 🔥 Kayıt işlemi - RegisterResponseDto yapısına göre
+  // 🔥 Kayıt işlemi
   register(payload: RegisterRequest): Observable<RegisterResponse> {
     return this.apiService.register(payload)
       .pipe(
         tap((response: RegisterResponse) => {
           console.log('✅ Register response:', response);
-          // RegisterResponseDto'da token yok, sadece user bilgileri var
-          // Bu yüzden kayıttan sonra otomatik login yok
         }),
         catchError(error => {
           console.error('❌ Register error:', error);
@@ -82,7 +79,7 @@ export class AuthService {
       );
   }
 
-  // 🔥 Çıkış işlemi - LogoutResponseDto yapısına göre
+  // 🔥 Çıkış işlemi
   logout(payload?: LogoutRequest): Observable<LogoutResponse> {
     const logoutPayload = payload || {};
     
@@ -101,7 +98,7 @@ export class AuthService {
       );
   }
 
-  // 🔥 Şifre unuttum - ForgotPasswordResponseDto yapısına göre
+  // 🔥 Şifre unuttum
   forgotPassword(email: string): Observable<ForgotPasswordResponse> {
     return this.apiService.forgotPassword(email)
       .pipe(
@@ -115,7 +112,7 @@ export class AuthService {
       );
   }
 
-  // 🔥 Şifre sıfırlama - ResetPasswordResponseDto yapısına göre
+  // 🔥 Şifre sıfırlama
   resetPassword(email: string, token: string, newPassword: string): Observable<ResetPasswordResponse> {
     return this.apiService.resetPassword({ email, token, newPassword })
       .pipe(
@@ -140,22 +137,29 @@ export class AuthService {
     return localStorage.getItem(this.ACCESS_TOKEN_KEY);
   }
 
-  // Refresh token (backend'de yok gibi görünüyor)
-  getRefreshToken(): string | null {
-    return null; // Backend'de refresh token yok
-  }
-
   // Kullanıcı verilerini al
-  getUserData(): any {
+  getCurrentUser(): User | null {
     if (!this.isBrowser) return null;
-    return this.getUserDataFromStorage();
+    
+    try {
+      const userDataStr = localStorage.getItem(this.USER_DATA_KEY);
+      if (userDataStr) {
+        return JSON.parse(userDataStr);
+      }
+      
+      // Eğer localStorage'da yoksa subject'ten al
+      return this.currentUserSubject.value;
+    } catch (error) {
+      console.error('Kullanıcı verisi alınamadı:', error);
+      return null;
+    }
   }
 
   // Giriş yapılmış mı kontrol et
   isLoggedIn(): boolean {
     if (!this.isBrowser) return false;
     const token = this.getAccessToken();
-    const user = this.getUserData();
+    const user = this.getCurrentUser();
     return !!(token && user);
   }
 
@@ -172,27 +176,22 @@ export class AuthService {
     }
   }
 
-  // 🔥 Auth verilerini kaydet - LoginResponseDto yapısına göre
+  // 🔥 Auth verilerini kaydet
   private saveAuthData(response: LoginResponse): void {
     if (!this.isBrowser) return;
+    
+    console.log('💾 Saving auth data to localStorage');
     
     // Token'ı kaydet
     localStorage.setItem(this.ACCESS_TOKEN_KEY, response.token);
     
-    // User bilgilerini kaydet (LoginResponseDto'daki fieldlar)
-    const userData = {
-      userId: response.userId,
-      username: response.username,
-      email: response.email
-    };
+    // User bilgilerini kaydet
+    localStorage.setItem(this.USER_DATA_KEY, JSON.stringify(response.user));
     
-    localStorage.setItem(this.USER_DATA_KEY, JSON.stringify(userData));
-    this.currentUserSubject.next(userData);
+    // BehaviorSubject'i güncelle
+    this.currentUserSubject.next(response.user);
     
-    console.log('🔐 Auth data saved:', {
-      token: response.token.substring(0, 20) + '...',
-      user: userData
-    });
+    console.log('🔐 Auth data saved successfully:', response.user);
   }
 
   // Auth verilerini temizle
@@ -207,7 +206,7 @@ export class AuthService {
   }
 
   // localStorage'dan kullanıcı verilerini al
-  private getUserDataFromStorage(): any {
+  private getUserDataFromStorage(): User | null {
     if (!this.isBrowser) return null;
     
     try {
@@ -224,7 +223,7 @@ export class AuthService {
     if (!this.isBrowser) return;
     
     const token = this.getAccessToken();
-    const user = this.getUserData();
+    const user = this.getCurrentUser();
     
     if (token && user) {
       // JWT token süresi kontrol et

@@ -1,3 +1,4 @@
+<!-- src/app/pages/surveys/survey-list/survey-list.component.html -->
 <div class="survey-list-container">
     <div class="header-section">
         <div class="header-content">
@@ -72,7 +73,7 @@
                     <div class="survey-stats">
                         <div class="stat-chip">
                             <span class="chip-icon">❓</span>
-                            <span class="chip-text">{{ survey.questionCount || 0 }} soru</span>
+                            <span class="chip-text">{{ getQuestionCount(survey) }} soru</span>
                         </div>
                         
                         <div class="stat-chip" *ngIf="getResponseCount(survey.surveyId) > 0">
@@ -92,7 +93,7 @@
                         class="action-btn preview" 
                         (click)="navigateToView(survey.surveyId)" 
                         title="Anketi Önizle">
-                        <span class="btn-icon">🔗</span>
+                        <span class="btn-icon">👁️</span>
                         <span class="btn-text">Önizle</span>
                     </button>
                     
@@ -184,7 +185,7 @@
                             <span class="btn-text">İlk Anketimi Oluştur</span>
                         </button>
                         
-                        <button class="btn-secondary-empty">
+                        <button class="btn-secondary-empty" (click)="showHelp()">
                             <span class="btn-icon">📖</span>
                             <span class="btn-text">Nasıl Başlarım?</span>
                         </button>

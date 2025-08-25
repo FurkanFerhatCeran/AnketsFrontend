@@ -1,3 +1,4 @@
+// src/app/pages/surveys/survey-edit/survey-edit.component.ts
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -64,7 +65,6 @@ export class SurveyEditComponent implements OnInit {
 
         forkJoin([surveyRequest, questionsRequest]).subscribe({
             next: ([survey, questions]) => {
-                // API'den gelen verinin 'surveyId' alanını alıp 'id' alanına atama
                 if (survey && survey.surveyId) {
                     this.survey = { 
                         id: survey.surveyId, 
@@ -72,8 +72,15 @@ export class SurveyEditComponent implements OnInit {
                         description: survey.description,
                         questions: questions || [] 
                     };
+                    
+                    // Soru tiplerini kontrol et ve gerekirse options dizilerini hazırla
+                    this.survey.questions.forEach((question: any) => {
+                        if (!question.options) {
+                            question.options = [];
+                        }
+                    });
                 } else {
-                    console.error('API’den dönen ankette ID (surveyId) bulunamadı.');
+                    console.error('API\'den dönen ankette ID (surveyId) bulunamadı.');
                     this.router.navigate(['/dashboard/surveys']);
                 }
                 this.isLoading = false;
@@ -87,8 +94,9 @@ export class SurveyEditComponent implements OnInit {
     }
 
     requiresOptions(questionTypeId: number | string): boolean {
-        const questionType = this.questionTypes.find(t => t.id === Number(questionTypeId));
-        return !!questionType?.requiredOptions;
+        const numericTypeId = Number(questionTypeId);
+        // Seçenek gerektiren soru tipleri: 3 (Radio), 4 (Checkbox), 5 (Dropdown)
+        return [3, 4, 5].includes(numericTypeId);
     }
 
     onTypeChange(question: any): void {
@@ -116,7 +124,10 @@ export class SurveyEditComponent implements OnInit {
     }
 
     removeOption(question: any, idx: number): void {
-        if (!question.options) return;
+        if (!question.options || question.options.length <= 2) {
+            alert('En az iki seçenek olmalıdır!');
+            return;
+        }
         question.options.splice(idx, 1);
         question.options.forEach((o: any, i: number) => (o.sortOrder = i));
     }
@@ -143,17 +154,25 @@ export class SurveyEditComponent implements OnInit {
     }
 
     removeQuestion(index: number): void {
+        if (this.survey.questions.length <= 1) {
+            alert('En az bir soru olmalıdır!');
+            return;
+        }
+        
         const question = this.survey.questions[index];
         if (question?.questionId && question.questionId > 0) {
-            this.questionService.deleteQuestion(question.questionId).subscribe({
-                next: () => {
-                    this.survey.questions.splice(index, 1);
-                    console.log('Soru başarıyla silindi.');
-                },
-                error: (err) => {
-                    console.error('Soru silinirken hata:', err);
-                }
-            });
+            if (confirm('Bu soruyu silmek istediğinize emin misiniz? Bu işlem geri alınamaz.')) {
+                this.questionService.deleteQuestion(question.questionId).subscribe({
+                    next: () => {
+                        this.survey.questions.splice(index, 1);
+                        console.log('Soru başarıyla silindi.');
+                    },
+                    error: (err) => {
+                        console.error('Soru silinirken hata:', err);
+                        alert('Soru silinirken bir hata oluştu!');
+                    }
+                });
+            }
         } else {
             this.survey.questions.splice(index, 1);
             console.log('Henüz kaydedilmemiş soru silindi.');
@@ -168,6 +187,41 @@ export class SurveyEditComponent implements OnInit {
             return;
         }
 
+        // Doğrulama kontrolleri
+        if (!this.survey.title?.trim()) {
+            alert('Anket başlığı zorunludur!');
+            return;
+        }
+
+        if (!this.survey.questions || this.survey.questions.length === 0) {
+            alert('En az bir soru eklemelisiniz!');
+            return;
+        }
+
+        for (let i = 0; i < this.survey.questions.length; i++) {
+            const question = this.survey.questions[i];
+            
+            if (!question.questionTitle?.trim()) {
+                alert(`${i + 1}. soru için başlık girmelisiniz!`);
+                return;
+            }
+            
+            // Seçenek gerektiren soru tipleri için kontrol
+            if (this.requiresOptions(question.questionTypeId)) {
+                if (!question.options || question.options.length < 2) {
+                    alert(`${i + 1}. soru için en az iki seçenek eklemelisiniz!`);
+                    return;
+                }
+                
+                // Boş seçenek kontrolü
+                const emptyOption = question.options.find((opt: any) => !opt.optionText?.trim());
+                if (emptyOption) {
+                    alert(`${i + 1}. soru için tüm seçenekleri doldurmalısınız!`);
+                    return;
+                }
+            }
+        }
+
         this.isSaving = true;
         
         this.apiService.updateSurvey(this.survey.id, {
@@ -180,7 +234,7 @@ export class SurveyEditComponent implements OnInit {
             error: (error) => {
                 console.error('Anket güncellenirken hata:', error);
                 this.isSaving = false;
-                alert('Anket güncellenirken hata oluştu! Detaylar için konsola bakın.');
+                alert('Anket güncellenirken hata oluştu!');
             }
         });
     }
@@ -208,14 +262,14 @@ export class SurveyEditComponent implements OnInit {
             if (question.questionId && question.questionId > 0) {
                 return this.questionService.updateQuestion(question.questionId, payload).pipe(
                     catchError(err => {
-                        console.error(`Soru güncellenirken hata oluştu:`, err);
+                        console.error('Soru güncellenirken hata oluştu:', err);
                         return of(null);
                     })
                 );
             } else {
                 return this.questionService.createQuestion(payload).pipe(
                     catchError(err => {
-                        console.error(`Soru oluşturulurken hata oluştu:`, err);
+                        console.error('Soru oluşturulurken hata oluştu:', err);
                         return of(null);
                     })
                 );
@@ -248,7 +302,9 @@ export class SurveyEditComponent implements OnInit {
     }
 
     cancel(): void {
-        this.router.navigate(['/dashboard/surveys']);
+        if (confirm('Değişiklikler kaydedilmeden çıkmak istediğinize emin misiniz?')) {
+            this.router.navigate(['/dashboard/surveys']);
+        }
     }
 
     trackByIndex(_i: number, _item: any): number {

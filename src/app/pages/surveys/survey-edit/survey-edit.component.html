@@ -1,79 +1,232 @@
 <!-- src/app/pages/surveys/survey-edit/survey-edit.component.html -->
-
-
 <div class="survey-creator">
-	<div class="creator-header">
-		<h2>Anketi Düzenle: {{ survey.title }}</h2>
-	</div>
+  <div class="creator-header">
+    <h2>Anketi Düzenle: {{ survey.title }}</h2>
+  </div>
 
-	<div *ngIf="isLoading" class="loading-spinner">
-		<p>Yükleniyor...</p>
-	</div>
+  <div *ngIf="isLoading" class="loading-spinner">
+    <p>Yükleniyor...</p>
+  </div>
 
-	<form *ngIf="!isLoading" (ngSubmit)="saveSurvey()">
-		<div class="form-group">
-			<label for="title">Anket Başlığı</label>
-			<input id="title" type="text" [(ngModel)]="survey.title" name="title" required class="form-control">
-		</div>
-		<div class="form-group">
-			<label for="description">Açıklama</label>
-			<textarea id="description" [(ngModel)]="survey.description" name="description" class="form-control" rows="3"></textarea>
-		</div>
+  <form *ngIf="!isLoading" (ngSubmit)="saveSurvey()" #surveyForm="ngForm">
+    <div class="form-group">
+      <label for="title">Anket Başlığı</label>
+      <input id="title" type="text" [(ngModel)]="survey.title" name="title" required class="form-control">
+    </div>
+    <div class="form-group">
+      <label for="description">Açıklama</label>
+      <textarea id="description" [(ngModel)]="survey.description" name="description" class="form-control" rows="3"></textarea>
+    </div>
 
-		<h3>Sorular</h3>
-		<div class="questions-container">
-			<div *ngFor="let question of survey.questions; let i = index; trackBy: trackByIndex" class="question-card">
-				<div class="card-header">
-					<h4>Soru {{ i + 1 }}</h4>
-					<button type="button" class="btn-delete" (click)="removeQuestion(i)">
-						&times;
-					</button>
-				</div>
+    <h3>Sorular</h3>
+    <div class="questions-container">
+      <div *ngFor="let question of survey.questions; let i = index; trackBy: trackByIndex" class="question-card">
+        <div class="card-header">
+          <h4>Soru {{ i + 1 }}</h4>
+          <button type="button" class="btn-delete" (click)="removeQuestion(i)">
+            &times;
+          </button>
+        </div>
 
-				<div class="form-group">
-					<label>Soru Metni</label>
-					<input type="text" [(ngModel)]="question.questionTitle" [name]="'question-title-' + i" required class="form-control">
-				</div>
+        <div class="form-group">
+          <label>Soru Metni</label>
+          <input type="text" [(ngModel)]="question.questionTitle" [name]="'question-title-' + i" required class="form-control">
+        </div>
 
-				<div class="form-group">
-					<label>Soru Tipi</label>
-					<select [(ngModel)]="question.questionTypeId" (ngModelChange)="onTypeChange(question)" [name]="'question-type-' + i" class="form-control">
-						<option *ngFor="let type of questionTypes" [ngValue]="type.id">
-							{{ type.description }}
-						</option>
-					</select>
-				</div>
+        <div class="form-group">
+          <label>Soru Açıklaması (Opsiyonel)</label>
+          <textarea [(ngModel)]="question.questionDescription" [name]="'question-description-' + i" class="form-control" rows="2"></textarea>
+        </div>
 
-				<div class="form-group" *ngIf="requiresOptions(question.questionTypeId)">
-                    <label>Seçenekler</label>
+        <div class="form-group">
+          <label>Soru Tipi</label>
+          <select [(ngModel)]="question.questionTypeId" (ngModelChange)="onTypeChange(question)" [name]="'question-type-' + i" class="form-control">
+            <option *ngFor="let type of questionTypes" [ngValue]="type.id">
+              {{ type.description }}
+            </option>
+          </select>
+        </div>
 
-                    <div class="option-row" *ngFor="let opt of question.options; let oi = index; trackBy: trackByIndex">
-                        <input type="text"
-                            class="form-control"
-                            [ngModel]="opt.optionText"
-                            (ngModelChange)="onOptionTextChange(question, oi, $event)"
-                            [name]="'q' + i + '-opt-' + oi"
-                            placeholder="Seçenek metni">
-                        <button type="button" class="btn-delete" (click)="removeOption(question, oi)">×</button>
-                    </div>
+        <!-- Soru tipine göre ek alanlar -->
+        <ng-container [ngSwitch]="question.questionTypeId">
+          
+          <!-- Kısa Metin (1) -->
+          <div *ngSwitchCase="1" class="preview-container">
+            <label>Önizleme:</label>
+            <input type="text" class="form-control" placeholder="Kısa metin cevabı" disabled>
+          </div>
 
-                    <button type="button" class="btn-secondary" (click)="addOption(question)">
-                        + Seçenek Ekle
-                    </button>
-                </div>
-			</div>
-		</div>
+          <!-- Uzun Metin (2) -->
+          <div *ngSwitchCase="2" class="preview-container">
+            <label>Önizleme:</label>
+            <textarea class="form-control" rows="3" placeholder="Uzun metin cevabı" disabled></textarea>
+          </div>
 
-		<div class="action-buttons">
-			<button type="button" class="btn-secondary" (click)="addQuestion()">
-				<span class="icon">+</span> Yeni Soru Ekle
-			</button>
-			<button type="submit" class="btn-primary">
-				Kaydet
-			</button>
-			<button type="button" class="btn-secondary" (click)="cancel()">
-				İptal
-			</button>
-		</div>
-	</form>
+          <!-- Tekil Seçim - Radio (3) -->
+          <div *ngSwitchCase="3" class="options-container">
+            <label>Seçenekler</label>
+            <div class="option-row" *ngFor="let opt of question.options; let oi = index; trackBy: trackByIndex">
+              <div class="option-preview">
+                <input type="radio" disabled>
+                <input type="text"
+                  class="form-control"
+                  [ngModel]="opt.optionText"
+                  (ngModelChange)="onOptionTextChange(question, oi, $event)"
+                  [name]="'q' + i + '-opt-' + oi"
+                  placeholder="Seçenek metni">
+              </div>
+              <button type="button" class="btn-delete" (click)="removeOption(question, oi)">×</button>
+            </div>
+            <button type="button" class="btn-secondary" (click)="addOption(question)">
+              + Seçenek Ekle
+            </button>
+          </div>
+
+          <!-- Çoklu Seçim - Checkbox (4) -->
+          <div *ngSwitchCase="4" class="options-container">
+            <label>Seçenekler</label>
+            <div class="option-row" *ngFor="let opt of question.options; let oi = index; trackBy: trackByIndex">
+              <div class="option-preview">
+                <input type="checkbox" disabled>
+                <input type="text"
+                  class="form-control"
+                  [ngModel]="opt.optionText"
+                  (ngModelChange)="onOptionTextChange(question, oi, $event)"
+                  [name]="'q' + i + '-opt-' + oi"
+                  placeholder="Seçenek metni">
+              </div>
+              <button type="button" class="btn-delete" (click)="removeOption(question, oi)">×</button>
+            </div>
+            <button type="button" class="btn-secondary" (click)="addOption(question)">
+              + Seçenek Ekle
+            </button>
+          </div>
+
+          <!-- Dropdown (5) -->
+          <div *ngSwitchCase="5" class="options-container">
+            <label>Seçenekler</label>
+            <div class="option-row" *ngFor="let opt of question.options; let oi = index; trackBy: trackByIndex">
+              <div class="option-preview">
+                <input type="text"
+                  class="form-control"
+                  [ngModel]="opt.optionText"
+                  (ngModelChange)="onOptionTextChange(question, oi, $event)"
+                  [name]="'q' + i + '-opt-' + oi"
+                  placeholder="Seçenek metni">
+              </div>
+              <button type="button" class="btn-delete" (click)="removeOption(question, oi)">×</button>
+            </div>
+            <button type="button" class="btn-secondary" (click)="addOption(question)">
+              + Seçenek Ekle
+            </button>
+            
+            <div class="preview-container">
+              <label>Önizleme:</label>
+              <select class="form-control" disabled>
+                <option>Seçiniz...</option>
+                <option *ngFor="let opt of question.options">{{opt.optionText}}</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Sayı (6) -->
+          <div *ngSwitchCase="6" class="preview-container">
+            <label>Önizleme:</label>
+            <input type="number" class="form-control" placeholder="Sayı girin" disabled>
+          </div>
+
+          <!-- Tarih (7) -->
+          <div *ngSwitchCase="7" class="preview-container">
+            <label>Önizleme:</label>
+            <input type="date" class="form-control" disabled>
+          </div>
+
+          <!-- Saat (8) -->
+          <div *ngSwitchCase="8" class="preview-container">
+            <label>Önizleme:</label>
+            <input type="time" class="form-control" disabled>
+          </div>
+
+          <!-- Rating (9) -->
+          <div *ngSwitchCase="9" class="preview-container">
+            <label>Önizleme:</label>
+            <div class="rating-preview">
+              <button type="button" class="rating-button" disabled>1</button>
+              <button type="button" class="rating-button" disabled>2</button>
+              <button type="button" class="rating-button" disabled>3</button>
+              <button type="button" class="rating-button" disabled>4</button>
+              <button type="button" class="rating-button" disabled>5</button>
+            </div>
+            <div class="rating-labels">
+              <span>1 (Kötü)</span>
+              <span>5 (Mükemmel)</span>
+            </div>
+          </div>
+
+          <!-- Scale (10) -->
+          <div *ngSwitchCase="10" class="preview-container">
+            <label>Önizleme:</label>
+            <input type="range" min="1" max="10" class="form-control" disabled>
+            <div class="scale-value">Değer: 5</div>
+          </div>
+
+          <!-- Email (11) -->
+          <div *ngSwitchCase="11" class="preview-container">
+            <label>Önizleme:</label>
+            <input type="email" class="form-control" placeholder="email@example.com" disabled>
+          </div>
+
+          <!-- Telefon (12) -->
+          <div *ngSwitchCase="12" class="preview-container">
+            <label>Önizleme:</label>
+            <input type="tel" class="form-control" placeholder="05XX XXX XX XX" disabled>
+          </div>
+
+          <!-- Dosya Yükleme (13) -->
+          <div *ngSwitchCase="13" class="preview-container">
+            <label>Önizleme:</label>
+            <input type="file" class="form-control" disabled>
+          </div>
+
+          <!-- Bilgi Mesajı (14) -->
+          <div *ngSwitchCase="14" class="preview-container">
+            <label>Önizleme:</label>
+            <div class="info-message-preview">
+              <p>{{ question.questionDescription || 'Bilgilendirme mesajı burada görünecek' }}</p>
+            </div>
+          </div>
+
+          <!-- Başlık (15) -->
+          <div *ngSwitchCase="15" class="preview-container">
+            <label>Önizleme:</label>
+            <div class="title-preview">
+              <h4>{{ question.questionTitle || 'Başlık burada görünecek' }}</h4>
+              <p *ngIf="question.questionDescription">{{ question.questionDescription }}</p>
+            </div>
+          </div>
+
+        </ng-container>
+
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" [(ngModel)]="question.isRequired" 
+              [name]="'question-required-' + i">
+            <span class="checkbox-custom"></span> Zorunlu Soru
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="action-buttons">
+      <button type="button" class="btn-secondary" (click)="addQuestion()">
+        <span class="icon">+</span> Yeni Soru Ekle
+      </button>
+      <button type="submit" class="btn-primary" [disabled]="isSaving">
+        {{ isSaving ? 'Kaydediliyor...' : 'Kaydet' }}
+      </button>
+      <button type="button" class="btn-secondary" (click)="cancel()">
+        İptal
+      </button>
+    </div>
+  </form>
 </div>

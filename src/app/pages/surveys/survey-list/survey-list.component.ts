@@ -16,7 +16,7 @@ import { SurveyService } from '../../../services/survey.service';
   styleUrls: ['./survey-list.component.scss']
 })
 export class SurveyListComponent implements OnInit {
-  surveys: Survey[] = []; // Artık Survey[] tipini kullanabiliriz
+  surveys: Survey[] = [];
   isLoading = true;
   showDeleteModal = false;
   surveyToDelete: Survey | null = null;
@@ -41,7 +41,7 @@ export class SurveyListComponent implements OnInit {
         this.loadQuestionCounts();
       },
       error: (error) => {
-        console.error('Error loading surveys:', error);
+        console.error('Anketler yüklenirken hata oluştu:', error);
         this.isLoading = false;
       }
     });
@@ -49,10 +49,10 @@ export class SurveyListComponent implements OnInit {
 
   loadQuestionCounts(): void {
     const requests = this.surveys.map(survey =>
-      this.questionService.getQuestionsBySurvey(survey.surveyId!).pipe( // surveyId artık opsiyonel olduğu için '!' eklendi
+      this.questionService.getQuestionsBySurvey(survey.surveyId!).pipe(
         map(questions => ({ surveyId: survey.surveyId, count: questions.length })),
         catchError(error => {
-          console.error(`Error loading question count for survey ${survey.surveyId}:`, error);
+          console.error(`Anket ${survey.surveyId} için soru sayısı yüklenirken hata:`, error);
           return of({ surveyId: survey.surveyId, count: 0 }); 
         })
       )
@@ -89,11 +89,17 @@ export class SurveyListComponent implements OnInit {
   }
 
   getCompletionRate(surveyId: number): number {
-    return Math.min(100, Math.floor((this.getResponseCount(surveyId) / 10) * 100));
+    // Basit bir tamamlanma oranı hesaplama (gerçek uygulamada daha karmaşık olabilir)
+    const responseCount = this.getResponseCount(surveyId);
+    return Math.min(100, Math.floor((responseCount / 50) * 100)); // 50 yanıt %100 olarak kabul ediliyor
   }
 
   formatDate(date: Date): string {
-    return new Date(date).toLocaleDateString('tr-TR');
+    return new Date(date).toLocaleDateString('tr-TR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
   }
 
   navigateToCreate(): void {
@@ -105,7 +111,7 @@ export class SurveyListComponent implements OnInit {
   }
 
   navigateToView(surveyId: number): void {
-    this.router.navigate(['/dashboard/surveys/take', surveyId]);
+    this.router.navigate(['/survey', surveyId]); // Anket önizleme sayfası
   }
 
   navigateToResults(surveyId: number): void {
@@ -137,8 +143,9 @@ export class SurveyListComponent implements OnInit {
           this.showSuccess('Anket başarıyla silindi.');
         },
         error: (error) => {
-          console.error('Error deleting survey:', error);
+          console.error('Anket silinirken hata:', error);
           this.showDeleteModal = false;
+          alert('Anket silinirken bir hata oluştu!');
         }
       });
     }
@@ -153,26 +160,59 @@ export class SurveyListComponent implements OnInit {
         this.activeDropdown = null;
       },
       error: (error) => {
-        console.error('Error updating survey status:', error);
+        console.error('Anket durumu güncellenirken hata:', error);
+        alert('Anket durumu güncellenirken bir hata oluştu!');
       }
     });
   }
 
   duplicateSurvey(survey: Survey): void {
     const newSurvey = {
-      ...survey,
       title: `${survey.title} (Kopya)`,
-      surveyId: 0 // Yeni bir anket olduğu için 0
+      description: survey.description,
+      isActive: false, // Kopya anket başlangıçta pasif olsun
+      questions: [] // Sorular ayrıca kopyalanacak
     };
     
     this.surveyService.createSurvey(newSurvey).subscribe({
-      next: () => {
-        this.loadSurveys();
-        this.showSuccess('Anket başarıyla kopyalandı.');
-        this.activeDropdown = null;
+      next: (createdSurvey) => {
+        // Soruları kopyala
+        this.copyQuestions(survey.surveyId!, createdSurvey.surveyId!);
       },
       error: (error) => {
-        console.error('Error duplicating survey:', error);
+        console.error('Anket kopyalanırken hata:', error);
+        alert('Anket kopyalanırken bir hata oluştu!');
+      }
+    });
+  }
+
+  private copyQuestions(sourceSurveyId: number, targetSurveyId: number): void {
+    this.questionService.getQuestionsBySurvey(sourceSurveyId).subscribe({
+      next: (questions) => {
+        const questionRequests = questions.map(question => {
+          const questionCopy = {
+            ...question,
+            surveyId: targetSurveyId,
+            questionId: 0 // Yeni soru oluşturulacak
+          };
+          return this.questionService.createQuestion(questionCopy);
+        });
+
+        forkJoin(questionRequests).subscribe({
+          next: () => {
+            this.loadSurveys();
+            this.showSuccess('Anket başarıyla kopyalandı.');
+            this.activeDropdown = null;
+          },
+          error: (error) => {
+            console.error('Sorular kopyalanırken hata:', error);
+            this.showSuccess('Anket kopyalandı ancak sorular kopyalanırken hata oluştu!');
+          }
+        });
+      },
+      error: (error) => {
+        console.error('Kaynak sorular yüklenirken hata:', error);
+        this.showSuccess('Anket kopyalandı ancak sorular kopyalanamadı!');
       }
     });
   }
@@ -182,25 +222,55 @@ export class SurveyListComponent implements OnInit {
     navigator.clipboard.writeText(shareUrl).then(() => {
       this.showSuccess('Paylaşım linki panoya kopyalandı.');
       this.activeDropdown = null;
+    }).catch(() => {
+      // Clipboard API desteklenmiyorsa
+      const textArea = document.createElement('textarea');
+      textArea.value = shareUrl;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      this.showSuccess('Paylaşım linki panoya kopyalandı.');
+      this.activeDropdown = null;
     });
   }
 
   exportSurvey(survey: Survey): void {
+    // Basit CSV dışa aktarma
     const csvContent = this.convertToCSV(survey);
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
-    link.href = url;
-    link.download = `${survey.title.replace(/\s+/g, '_')}.csv`;
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute('href', url);
+    link.setAttribute('download', `${survey.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.csv`);
+    link.style.visibility = 'hidden';
+    
+    document.body.appendChild(link);
     link.click();
-    window.URL.revokeObjectURL(url);
+    document.body.removeChild(link);
+    
     this.activeDropdown = null;
+    this.showSuccess('Anket başarıyla dışa aktarıldı.');
   }
 
   private convertToCSV(survey: Survey): string {
-    const headers = ['Soru', 'Yanıt Sayısı'];
-    const rows = [[`Soru Sayısı:`, survey.questionCount || 0]];
-    return [headers, ...rows].map(row => row.join(',')).join('\n');
+    const headers = ['Anket Bilgileri', 'Değer'];
+    const rows = [
+      ['Başlık', survey.title],
+      ['Açıklama', survey.description || ''],
+      ['Durum', survey.isActive ? 'Aktif' : 'Pasif'],
+      ['Soru Sayısı', (survey.questionCount || 0).toString()],
+      ['Oluşturulma Tarihi', this.formatDate(survey.createdAt)]
+    ];
+    
+    return [headers, ...rows].map(row => 
+      row.map(field => `"${field}"`).join(',')
+    ).join('\n');
+  }
+
+  showHelp(): void {
+    alert('Yardım sayfası yakında eklenecek!');
   }
 
   private showSuccess(message: string): void {
@@ -212,6 +282,6 @@ export class SurveyListComponent implements OnInit {
   }
 
   trackBySurvey(index: number, survey: Survey): number {
-    return survey.surveyId!; // surveyId'nin mevcut olduğunu varsayıyoruz
+    return survey.surveyId!;
   }
 }
