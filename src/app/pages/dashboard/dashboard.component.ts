@@ -19,6 +19,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatTooltipModule } from '@angular/material/tooltip';
+// AboutComponent import'u kaldırıldı - dashboard'da kullanılmıyor
 
 @Component({
   selector: 'app-dashboard',
@@ -65,7 +66,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     { name: 'Analizler', icon: 'analytics', route: '/dashboard/analytics' },
     { name: 'Profil', icon: 'person', route: '/dashboard/profile' },
     { name: 'Ayarlar', icon: 'settings', route: '/dashboard/settings' },
-    { name: 'Yardım', icon: 'help_outline', route: '/dashboard/help' }
+    { name: 'Hakkımızda', icon: 'info', route: '/dashboard/about' }
   ];
 
   ngOnInit(): void {
@@ -320,11 +321,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
       'analytics': 'analytics',
       'person': 'profile',
       'settings': 'settings',
-      'help_outline': 'help'
+      'help_outline': 'help',
+      'info': 'about'
     };
     return iconMap[item.icon] || 'default';
   }
 
+  // Sidebar'da alt başlıkları güncelle
   getMenuDescription(item: any): string {
     const descriptions: { [key: string]: string } = {
       'Anasayfa': 'Genel bakış',
@@ -332,7 +335,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
       'Yeni Anket': 'Hızlı oluştur',
       'Analizler': 'Detaylı raporlar',
       'Profil': 'Hesap ayarları',
-      'Ayarlar': 'Uygulama tercihleri'
+      'Ayarlar': 'Uygulama tercihleri',
+      'Hakkımızda': 'Şirket bilgileri'
     };
     return descriptions[item.name] || '';
   }

@@ -49,13 +49,6 @@
                     
                     <div class="header-actions">
                         <button 
-                            class="quick-action-btn delete" 
-                            (click)="confirmDelete(survey)"
-                            title="Hızlı Sil">
-                            <span class="btn-icon">🗑️</span>
-                        </button>
-                        
-                        <button 
                             class="quick-action-btn menu" 
                             (click)="toggleDropdown(survey.surveyId)"
                             title="Menü">
@@ -143,12 +136,6 @@
                                 <span class="item-text">Dışa Aktar</span>
                             </button>
                             
-                            <div class="dropdown-divider"></div>
-                            
-                            <button (click)="confirmDelete(survey)" class="dropdown-item danger">
-                                <span class="item-icon">🗑️</span>
-                                <span class="item-text">Sil</span>
-                            </button>
                         </div>
                     </div>
                 </div>
@@ -202,21 +189,6 @@
                 <span class="toast-message">{{ successMessage }}</span>
             </div>
             <button class="toast-close" (click)="showSuccessMessage = false">×</button>
-        </div>
-    </div>
-</div>
-
-<div class="delete-confirmation-overlay" *ngIf="showDeleteModal">
-    <div class="delete-modal">
-        <span class="modal-icon">⚠️</span>
-        <h3 class="modal-title">Anketi Sil</h3>
-        <p class="modal-message">
-            "<strong>{{ surveyToDelete?.title }}</strong>" anketini silmek istediğinizden emin misiniz? 
-            <br>Bu işlem geri alınamaz ve tüm yanıtlar silinecektir.
-        </p>
-        <div class="modal-actions">
-            <button class="btn-cancel" (click)="cancelDelete()">İptal</button>
-            <button class="btn-delete" (click)="executeDelete()">Evet, Sil</button>
         </div>
     </div>
 </div>

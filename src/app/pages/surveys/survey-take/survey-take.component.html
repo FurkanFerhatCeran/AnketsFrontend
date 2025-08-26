@@ -1,7 +1,5 @@
 <!-- src/app/pages/surveys/survey-take/survey-take.component.html -->
 <div class="survey-viewer">
-  <!-- Debug bilgisi kaldırıldı -->
-
   <!-- Önizleme modunda header -->
   <div class="survey-header" *ngIf="isPreviewMode">
     <div class="preview-header-content">
@@ -34,15 +32,17 @@
 
   <!-- Normal anket header -->
   <div class="survey-header" *ngIf="!isPreviewMode">
-    <h1>{{ survey.title }}</h1>
-    <p *ngIf="survey.description" class="survey-description">
-      {{ survey.description }}
-    </p>
-    <div class="survey-meta">
-      <span class="question-count" *ngIf="survey.questions">{{ survey.questions.length }} soru</span>
-      <span class="required-note" *ngIf="hasRequiredQuestions()">
-        * ile işaretli sorular zorunludur
-      </span>
+    <div class="normal-header-content">
+      <h1>{{ survey.title }}</h1>
+      <p *ngIf="survey.description" class="survey-description">
+        {{ survey.description }}
+      </p>
+      <div class="survey-meta">
+        <span class="question-count" *ngIf="survey.questions">{{ survey.questions.length }} soru</span>
+        <span class="required-note" *ngIf="hasRequiredQuestions()">
+          * ile işaretli sorular zorunludur
+        </span>
+      </div>
     </div>
   </div>
 

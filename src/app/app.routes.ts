@@ -17,6 +17,7 @@ import { SurveyCreateComponent } from './pages/surveys/survey-create/survey-crea
 import { SurveyEditComponent } from './pages/surveys/survey-edit/survey-edit.component';
 import { SurveyListComponent } from './pages/surveys/survey-list/survey-list.component';
 import { SurveyTakeComponent } from './pages/surveys/survey-take/survey-take.component';
+import { AboutComponent } from './pages/about/about.component';
 
 export const routes: Routes = [
   // Giriş yapmadan erişilebilen yollar
@@ -42,6 +43,9 @@ export const routes: Routes = [
       { path: 'surveys/create', component: SurveyCreateComponent },
       { path: 'surveys/edit/:id', component: SurveyEditComponent },
       { path: 'surveys/take/:id', component: SurveyTakeComponent },
+      
+      // Hakkımızda sayfası eklendi
+      { path: 'about', component: AboutComponent },
     ]
   },
   

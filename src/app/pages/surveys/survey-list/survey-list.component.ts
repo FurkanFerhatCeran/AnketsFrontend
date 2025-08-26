@@ -18,8 +18,6 @@ import { SurveyService } from '../../../services/survey.service';
 export class SurveyListComponent implements OnInit {
   surveys: Survey[] = [];
   isLoading = true;
-  showDeleteModal = false;
-  surveyToDelete: Survey | null = null;
   showSuccessMessage = false;
   successMessage = '';
   activeDropdown: number | null = null;
@@ -122,35 +120,6 @@ export class SurveyListComponent implements OnInit {
 
   toggleDropdown(surveyId: number): void {
     this.activeDropdown = this.activeDropdown === surveyId ? null : surveyId;
-  }
-
-  confirmDelete(survey: Survey): void {
-    this.surveyToDelete = survey;
-    this.showDeleteModal = true;
-    this.activeDropdown = null;
-  }
-
-  cancelDelete(): void {
-    this.showDeleteModal = false;
-    this.surveyToDelete = null;
-  }
-
-  executeDelete(): void {
-    if (this.surveyToDelete) {
-      this.surveyService.deleteSurvey(this.surveyToDelete.surveyId!).subscribe({ 
-        next: () => {
-          this.surveys = this.surveys.filter(s => s.surveyId !== this.surveyToDelete!.surveyId); 
-          this.showDeleteModal = false;
-          this.surveyToDelete = null;
-          this.showSuccess('Anket başarıyla silindi.');
-        },
-        error: (error) => {
-          console.error('Anket silinirken hata:', error);
-          this.showDeleteModal = false;
-          alert('Anket silinirken bir hata oluştu!');
-        }
-      });
-    }
   }
 
   toggleSurveyStatus(survey: Survey): void {
