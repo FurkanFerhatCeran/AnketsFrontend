@@ -124,8 +124,8 @@ app-root {
 
 // Sidebar footer
 .sidebar-footer {
-  // `dashboard.component.scss` içindeki stilleri kontrol edin, çakışma olmamalı
-  // Bu stilin yerine `dashboard.component.scss`'de bir `div` içine alınması daha iyi olabilir.
+  // dashboard.component.scss içindeki stilleri kontrol edin, çakışma olmamalı
+  // Bu stilin yerine dashboard.component.scss'de bir div içine alınması daha iyi olabilir.
   // Örneğin:
   // .mat-sidenav {
   //    .sidebar-footer-content { /* Bu div'i html'inize ekleyin */
@@ -134,7 +134,7 @@ app-root {
   // }
   border-top: 1px solid rgba(0, 0, 0, 0.08);
   background: rgba(255, 255, 255, 0.5); 
-  padding: 20px; /* Bu değerler `dashboard.component.scss`'dekiyle çakışabilir */
+  padding: 20px; /* Bu değerler dashboard.component.scss'dekiyle çakışabilir */
   
   .app-version {
     display: flex;
