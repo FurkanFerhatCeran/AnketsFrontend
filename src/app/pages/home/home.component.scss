@@ -1,11 +1,35 @@
 /* src/app/pages/home/home.component.scss */
 
+// Bu sayfa için tam ekran arka plan resmi (gradyanı ezer)
+:host {
+  display: block;
+  position: relative;
+}
+
+:host::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('/assets/backgrounds/back.png') center center / cover no-repeat fixed;
+  z-index: 0; // İçerik bunun üzerinde kalır
+}
+
+// Dashboard içerik alanında gradyanı ezmek için
+:host ::ng-deep .mat-sidenav-content {
+  background: url('/assets/backgrounds/back.png') center center / cover no-repeat fixed !important;
+}
+
 .home-container {
   padding: 24px;
   max-width: 1400px;
   margin: 0 auto;
   min-height: calc(100vh - 72px);
   backdrop-filter: saturate(1.1);
+  position: relative;
+  z-index: 1; // Arka plan katmanının üzerinde
 }
 
 // Hoş Geldiniz Bölümü
@@ -100,13 +124,14 @@
     h2 {
       font-size: 2rem;
       font-weight: 700;
-      color: #2d3748;
+      color: #ffffff;
       margin-bottom: 12px;
+      text-shadow: 0 2px 12px rgba(0,0,0,0.15);
     }
     
     p {
       font-size: 1.1rem;
-      color: #64748b;
+      color: rgba(255, 255, 255, 0.9);
       max-width: 600px;
       margin: 0 auto;
     }
@@ -236,13 +261,16 @@
     }
     
     &.view-button {
-      border: 2px solid #667eea;
-      color: #667eea;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #ffffff;
+      border: none;
       
       &:hover {
-        background: rgba(102, 126, 234, 0.1);
         transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
       }
+
+      mat-icon { color: #ffffff; }
     }
   }
 }
