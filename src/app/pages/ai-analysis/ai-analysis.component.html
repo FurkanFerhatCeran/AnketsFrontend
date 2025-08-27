@@ -29,13 +29,56 @@
   </mat-card>
 
   <!-- Analiz Sonucu -->
-  <div *ngIf="aiAnalysisResult" class="analysis-results">
-    <h3>📑 Analiz Özeti</h3>
-    <mat-card class="result-card">
-      <h4>Yapay Zeka Analiz Sonuçları</h4>
-      <div class="result-content">
-        <pre>{{ aiAnalysisResult.aiResponse }}</pre>
+  <div *ngIf="parsedAnalysis" class="analysis-results">
+    
+    <!-- Analiz Başlığı ve Meta Bilgiler -->
+    <mat-card class="header-card">
+      <div class="analysis-header">
+        <h3>📑 {{ parsedAnalysis.metadata.surveyTitle }}</h3>
+        <div class="metadata">
+          <span class="generated-date">📅 {{ parsedAnalysis.metadata.generatedAt }}</span>
+          <span class="confidence-level">🎯 Güven Seviyesi: {{ parsedAnalysis.metadata.confidenceLevel * 100 | number:'1.0-0' }}%</span>
+        </div>
       </div>
     </mat-card>
+
+    <!-- Özet -->
+    <mat-card class="summary-card">
+      <div class="card-header">
+        <h4>📋 Analiz Özeti</h4>
+      </div>
+      <div class="card-content">
+        <p class="summary-text">{{ parsedAnalysis.summary }}</p>
+      </div>
+    </mat-card>
+
+    <!-- İçgörüler -->
+    <mat-card class="insights-card" *ngIf="parsedAnalysis.insights.length > 0">
+      <div class="card-header">
+        <h4>💡 Önemli İçgörüler</h4>
+      </div>
+      <div class="card-content">
+        <ul class="insights-list">
+          <li *ngFor="let insight of parsedAnalysis.insights" class="insight-item">
+            {{ insight }}
+          </li>
+        </ul>
+      </div>
+    </mat-card>
+
+    <!-- Öneriler -->
+    <mat-card class="recommendations-card" *ngIf="parsedAnalysis.recommendations.length > 0">
+      <div class="card-header">
+        <h4>🎯 Öneriler</h4>
+      </div>
+      <div class="card-content">
+        <ul class="recommendations-list">
+          <li *ngFor="let recommendation of parsedAnalysis.recommendations" class="recommendation-item">
+            {{ recommendation }}
+          </li>
+        </ul>
+      </div>
+    </mat-card>
+
   </div>
 </div>

@@ -287,32 +287,4 @@ export class ProfileComponent implements OnInit, OnDestroy {
       this.showErrorMessage = false;
     }, 5000);
   }
-
-  // Hesap silme modal'ını göster
-  showDeleteAccountModal(): void {
-    if (confirm('Hesabınızı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz ve tüm verileriniz kalıcı olarak silinecektir!')) {
-      this.deleteAccount();
-    }
-  }
-
-  // Hesabı sil
-  deleteAccount(): void {
-    this.isLoading = true;
-    
-    this.userService.deleteAccount()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (response: any) => {
-          this.showSuccess('Hesabınız başarıyla silindi. Çıkış yapılıyor...');
-          setTimeout(() => {
-            this.authService.logout();
-          }, 2000);
-        },
-        error: (error: any) => {
-          console.error('Hesap silinirken hata:', error);
-          this.showError('Hesap silinirken bir hata oluştu. Lütfen tekrar deneyin.');
-          this.isLoading = false;
-        }
-      });
-  }
 }
