@@ -1,0 +1,45 @@
+<div class="settings-container" [ngClass]="{'dark-theme': isDarkTheme}">
+  <h2 class="settings-title">⚙ Ayarlar</h2>
+
+  <!-- Tema Ayarı -->
+  <div class="settings-section">
+    <h3>Tema</h3>
+    <p>Açık veya koyu modu seçin.</p>
+    <button class="btn-toggle" (click)="toggleTheme()">
+      {{ isDarkTheme ? '🌙 Koyu Mod' : '☀ Açık Mod' }}
+    </button>
+  </div>
+
+  <!-- E-posta Bildirimleri -->
+  <div class="settings-section">
+    <h3>E-posta Bildirimleri</h3>
+    <p>Yeni anketler ve güncellemeler hakkında bildirim alın.</p>
+    <label class="switch">
+      <input type="checkbox" [(ngModel)]="emailNotifications" />
+      <span class="slider round"></span>
+    </label>
+    <button class="btn-primary" (click)="saveSettings()">Kaydet</button>
+  </div>
+
+  <!-- Hesap Yönetimi -->
+  <div class="settings-section danger-zone">
+    <h3>Hesap Yönetimi</h3>
+    <p>Hesabınızı devre dışı bırakın veya şifrenizi değiştirin.</p>
+    <button class="btn-danger" (click)="showDeactivateModal()">Hesabı Devre Dışı Bırak</button>
+  </div>
+
+  <!-- Başarı Mesajı -->
+  <div *ngIf="successMessage" class="alert success">{{ successMessage }}</div>
+  <div *ngIf="deactivationSuccessMessage" class="alert danger">{{ deactivationSuccessMessage }}</div>
+
+  <!-- Modal -->
+  <div class="modal" *ngIf="showDeactivationModal">
+    <div class="modal-content">
+      <h3>Hesabınızı devre dışı bırakmak istediğinize emin misiniz?</h3>
+      <div class="modal-actions">
+        <button class="btn-danger" (click)="confirmDeactivation()">Evet, Devre Dışı Bırak</button>
+        <button class="btn-secondary" (click)="cancelDeactivation()">İptal</button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,24 +1,25 @@
 /* Survey Create Sayfası - Anketlerim sayfasına uygun tasarım */
 
-// Ana container - Arka plan resmi ile
-.survey-creator {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+// Ana sayfa arka planı (body'ye uygulanacak)
+:host {
+  display: block;
   min-height: 100vh;
   background: url('/backgrounds/back.png') no-repeat center center;
   background-size: cover;
   background-attachment: scroll;
-  padding: 2rem 3rem;
-  position: relative;
-  width: 100%;
-  max-width: 100vw;
-  
-  @media (max-width: 1200px) {
-    padding: 2rem;
-  }
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  padding: 2rem;
   
   @media (max-width: 768px) {
     padding: 1rem;
   }
+}
+
+// Ana container - Sadece içerik etrafında
+.survey-creator {
+  max-width: 1000px;
+  margin: 0 auto;
+  position: relative;
 }
 
 // Header Section - Beyaz arka plan, siyah yazı
@@ -311,8 +312,10 @@ h3 {
   padding: 2rem;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
   margin-bottom: 2rem;
-  width: 100%;
-  max-width: none;
+  
+  @media (max-width: 768px) {
+    padding: 1rem;
+  }
 }
 
 // Selected Template Info

@@ -17,6 +17,7 @@ import { ApiService } from './services/api.service';
 import { QuestionService } from './services/question.service';
 import { SurveyService } from './services/survey.service';
 
+import { ThemeService } from './services/theme.service'; // <-- Bu satırı ekleyin
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
@@ -35,6 +36,7 @@ export const appConfig: ApplicationConfig = {
     // Servisleri providers'a ekle
     ApiService,
     SurveyService,
-    QuestionService
+    QuestionService,
+    ThemeService // <-- Bu satırı ekleyin
   ]
 };

@@ -9,7 +9,7 @@ html, body {
   height: 100%;
   margin: 0;
   // Material Design bileşenleri için Roboto önerilir, ancak genel metin için Inter kullanabiliriz
-  font-family: 'Inter', Roboto, "Helvetica Neue", sans-serif; 
+  font-family: 'Inter', Roboto, "Helvetica Neue", sans-serif;
   overflow: hidden; /* Sayfanın tamamı arka plan olacaksa taşmayı engelle */
 
   // TÜM SAYFAYA ARKA PLAN EKLEME
@@ -50,7 +50,7 @@ app-root {
     backdrop-filter: blur(10px) !important; // Blur efekti
     background-color: rgba(255, 255, 255, 0.9) !important; // Hafif şeffaf beyaz arka plan
   }
-    
+
   .profile-header {
     display: flex;
     align-items: center;
@@ -58,7 +58,7 @@ app-root {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); // Mor-mavi gradient
     margin: -8px -8px 8px -8px; // Menu panelinin paddingini ignore eder
     border-radius: 16px 16px 0 0; // Üst köşeler yuvarlak
-        
+    
     .profile-avatar {
       width: 48px;
       height: 48px;
@@ -72,7 +72,7 @@ app-root {
       margin-right: 12px;
       border: 2px solid rgba(255, 255, 255, 0.3);
     }
-        
+    
     .profile-info {
       .profile-name {
         color: white;
@@ -80,24 +80,476 @@ app-root {
         font-size: 16px;
         margin-bottom: 2px;
       }
-            
+      
       .profile-email {
         color: rgba(255, 255, 255, 0.8);
         font-size: 14px;
       }
     }
   }
-    
+  
   .mat-mdc-menu-item {
     border-radius: 8px !important;
     margin: 4px 8px !important;
     transition: all 0.2s ease !important;
-        
+    
     &:hover {
       background: rgba(102, 126, 234, 0.1) !important; // Hover rengi
       transform: translateX(4px) !important; // Hafif kaydırma efekti
     }
-        
+    
+    &.logout-item:hover {
+      background: rgba(255, 107, 107, 0.1) !important; // Kırmızımsı logout hover
+      color: #ff6b6b !important;
+    }
+  }
+}
+
+// Menu divider özelleştirme
+.menu-divider {
+  margin: 16px 0 !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+// Menüdeki bölüm başlıkları
+.menu-section-title {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: #94a3b8 !important; // Gri ton
+  padding: 8px 20px 4px 20px !important;
+  margin: 0 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+}
+
+// Sidebar footer
+.sidebar-footer {
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.5);
+  padding: 20px; /* Bu değerler dashboard.component.scss'dekiyle çakışabilir */
+  
+  .app-version {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #94a3b8;
+    font-size: 12px;
+    
+    mat-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+      margin-right: 6px;
+    }
+  }
+}
+
+// Sayfa başlık stilleri (router-outlet tarafından render edilen içerik için)
+.page-header {
+  margin-bottom: 32px;
+  
+  .page-title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0 0 8px 0;
+    background:white;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  .page-breadcrumb {
+    display: flex;
+    align-items: center;
+    color: #64748b; // Gri ton
+    font-size: 14px;
+    
+    mat-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+      margin: 0 8px;
+    }
+  }
+}
+
+// Active indicator animasyonu
+.active-indicator {
+  margin-left: auto !important;
+  color: white !important;
+  animation: slideInRight 0.3s ease !important;
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+// Responsive navigasyon için medya sorgusu
+@media (max-width: 768px) {
+  // Bu kural, .mat-sidenav-content içerisindeki .content-wrapper'ın içindeki .page-header'ı hedef alır
+  .mat-sidenav-content .content-wrapper .page-header .page-title {
+    font-size: 1.5rem;
+  }
+}
+
+/* Global olarak tüm uygulamada kullanılacak stiller */
+body {
+  font-family: 'Arial', sans-serif;
+  background-color: #f4f7f6;
+  color: #333;
+  margin: 0;
+}
+
+.form-control {
+  width: 100%;
+  padding: 10px;
+  margin-top: 5px;
+  margin-bottom: 15px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+select.form-control {
+  appearance: none;
+  background-color: #fff;
+}
+
+.btn-primary {
+  background-color: #007bff;
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s ease;
+}
+
+.btn-primary:hover {
+  background-color: #0056b3;
+}
+
+.btn-secondary {
+  background-color: #6c757d;
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  margin-left: 10px;
+  transition: background-color 0.3s ease;
+}
+
+.btn-secondary:hover {
+  background-color: #5a6268;
+}
+
+.btn-delete {
+  background-color: transparent;
+  color: #dc3545;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.btn-delete:hover {
+  color: #c82333;
+}
+
+.survey-creator {
+  max-width: 800px;
+  margin: 40px auto;
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.creator-header {
+  border-bottom: 2px solid #eee;
+  padding-bottom: 15px;
+  margin-bottom: 20px;
+}
+
+.questions-container {
+  margin-top: 20px;
+}
+
+.question-card {
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  background-color: #fafafa;
+  position: relative;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+}
+
+.question-card.has-error {
+  border-color: #dc3545;
+  box-shadow: 0 0 5px rgba(220, 53, 69, 0.5);
+}
+
+.error-message {
+  color: #dc3545;
+  font-size: 12px;
+  margin-top: -10px;
+  margin-bottom: 15px;
+}
+
+.action-buttons {
+  margin-top: 20px;
+  text-align: right;
+}
+
+.action-buttons .btn-primary {
+  margin-left: 10px;
+}
+
+.action-buttons .btn-secondary {
+  margin-left: 0;
+}
+
+.checkbox-label {
+  display: block;
+  position: relative;
+  padding-left: 25px;
+  cursor: pointer;
+  font-size: 16px;
+  user-select: none;
+  margin-top: 5px;
+  margin-bottom: 15px;
+}
+
+.checkbox-label input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+.checkbox-custom {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 18px;
+  width: 18px;
+  background-color: #eee;
+  border-radius: 3px;
+  transition: background-color 0.3s ease;
+}
+
+.checkbox-label:hover input ~ .checkbox-custom {
+  background-color: #ccc;
+}
+
+.checkbox-label input:checked ~ .checkbox-custom {
+  background-color: #007bff;
+}
+
+.checkbox-custom:after {
+  content: "";
+  position: absolute;
+  display: none;
+}
+
+.checkbox-label input:checked ~ .checkbox-custom:after {
+  display: block;
+}
+
+.checkbox-label .checkbox-custom:after {
+  left: 6px;
+  top: 3px;
+  width: 4px;
+  height: 9px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.rating-container {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 15px;
+}
+
+.rating-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+}
+
+.rating-box {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid #ccc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: bold;
+  transition: all 0.2s ease;
+}
+
+.rating-item:hover .rating-box,
+.rating-item.selected .rating-box {
+  background-color: #007bff;
+  color: white;
+  border-color: #007bff;
+  transform: scale(1.1);
+}
+
+.rating-item span {
+  background-color: white;
+  margin-top: 5px;
+  font-size: 14px;
+}
+
+/* ===== Yalnızca Koyu Tema Override'ları (açık tema mevcut SCSS'i kullanır) ===== */
+body.dark-theme {
+  background-color: #0b1220 !important;
+  color: #e5e7eb !important;
+}
+
+body.dark-theme .survey-creator,
+body.dark-theme .question-card,
+body.dark-theme .mat-sidenav,
+body.dark-theme .mat-sidenav-content,
+body.dark-theme .mat-drawer-container,
+body.dark-theme .mat-drawer-content {
+  background-color: #111827 !important;
+  color: #e5e7eb !important;
+  border-color: #1f2937 !important;
+}
+
+body.dark-theme .page-header .page-title,
+body.dark-theme .menu-section-title {
+  color: #e5e7eb !important;
+}
+
+body.dark-theme .menu-divider {
+  border-color: #1f2937 !important;
+}/* src/styles.scss */
+/* Uygulama genelindeki global stiller ve tüm sayfa arka planı */
+
+// Font importları
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* Genel stil sıfırlamaları ve fontlar */
+html, body {
+  height: 100%;
+  margin: 0;
+  // Material Design bileşenleri için Roboto önerilir, ancak genel metin için Inter kullanabiliriz
+  font-family: 'Inter', Roboto, "Helvetica Neue", sans-serif;
+  overflow: hidden; /* Sayfanın tamamı arka plan olacaksa taşmayı engelle */
+
+  // TÜM SAYFAYA ARKA PLAN EKLEME
+  background-image: url('/assets/backgrounds/on-boarding-bg.png'); /* Resminizin YOLUNU KONTROL EDİN */
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-color: transparent !important; /* Herhangi bir varsayılan arka plan rengini ezer */
+}
+
+/* Angular Material bileşenleri için şeffaflık ayarları */
+/* Bu selektörler, Material bileşenlerinin varsayılan arka planlarını şeffaf yapar */
+.mat-sidenav-container,
+.mat-sidenav,
+.mat-sidenav-content,
+.mat-drawer-container, /* Eğer mat-drawer kullanılıyorsa */
+.mat-drawer-content { /* Eğer mat-drawer kullanılıyorsa */
+  background-color: transparent !important;
+}
+
+/* Ana uygulama kök elementi için de şeffaflık */
+app-root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  background-color: transparent !important;
+}
+
+// Özel Material tema override'ları
+.profile-menu {
+  .mat-mdc-menu-panel {
+    min-width: 280px !important;
+    border-radius: 16px !important;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    backdrop-filter: blur(10px) !important; // Blur efekti
+    background-color: rgba(255, 255, 255, 0.9) !important; // Hafif şeffaf beyaz arka plan
+  }
+
+  .profile-header {
+    display: flex;
+    align-items: center;
+    padding: 16px 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); // Mor-mavi gradient
+    margin: -8px -8px 8px -8px; // Menu panelinin paddingini ignore eder
+    border-radius: 16px 16px 0 0; // Üst köşeler yuvarlak
+    
+    .profile-avatar {
+      width: 48px;
+      height: 48px;
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      margin-right: 12px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    .profile-info {
+      .profile-name {
+        color: white;
+        font-weight: 600;
+        font-size: 16px;
+        margin-bottom: 2px;
+      }
+      
+      .profile-email {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 14px;
+      }
+    }
+  }
+  
+  .mat-mdc-menu-item {
+    border-radius: 8px !important;
+    margin: 4px 8px !important;
+    transition: all 0.2s ease !important;
+    
+    &:hover {
+      background: rgba(102, 126, 234, 0.1) !important; // Hover rengi
+      transform: translateX(4px) !important; // Hafif kaydırma efekti
+    }
+    
     &.logout-item:hover {
       background: rgba(255, 107, 107, 0.1) !important; // Kırmızımsı logout hover
       color: #ff6b6b !important;
@@ -128,12 +580,12 @@ app-root {
   // Bu stilin yerine dashboard.component.scss'de bir div içine alınması daha iyi olabilir.
   // Örneğin:
   // .mat-sidenav {
-  //    .sidebar-footer-content { /* Bu div'i html'inize ekleyin */
-  //       position: absolute; bottom: 0; left: 0; right: 0; padding: 20px; ...
-  //    }
+  //     .sidebar-footer-content { /* Bu div'i html'inize ekleyin */
+  //         position: absolute; bottom: 0; left: 0; right: 0; padding: 20px; ...
+  //     }
   // }
   border-top: 1px solid rgba(0, 0, 0, 0.08);
-  background: rgba(255, 255, 255, 0.5); 
+  background: rgba(255, 255, 255, 0.5);
   padding: 20px; /* Bu değerler dashboard.component.scss'dekiyle çakışabilir */
   
   .app-version {
@@ -142,7 +594,7 @@ app-root {
     justify-content: center;
     color: #94a3b8;
     font-size: 12px;
-        
+    
     mat-icon {
       font-size: 16px;
       width: 16px;
@@ -155,7 +607,7 @@ app-root {
 // Sayfa başlık stilleri (router-outlet tarafından render edilen içerik için)
 .page-header {
   margin-bottom: 32px;
-    
+  
   .page-title {
     font-size: 2rem;
     font-weight: 700;
@@ -165,13 +617,13 @@ app-root {
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
-    
+  
   .page-breadcrumb {
     display: flex;
     align-items: center;
     color: #64748b; // Gri ton
     font-size: 14px;
-        
+    
     mat-icon {
       font-size: 16px;
       width: 16px;
@@ -435,4 +887,3 @@ select.form-control {
   margin-top: 5px;
   font-size: 14px;
 }
-//Yeni push

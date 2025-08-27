@@ -9,15 +9,16 @@ import { ForgotPasswordComponent } from './pages/auth/forgot-password/forgot-pas
 import { DashboardComponent } from './pages/dashboard/dashboard.component';
 import { NotFoundComponent } from './pages/NotFound/not-found.component';
 import { ProfileComponent } from './pages/profile/profile.component';
-
+// Ayarlar bileşeni için gerekli import
+import { SettingsComponent } from './pages/settings/settings.component';
 
 import { HomeComponent } from './pages/home/home.component';
 // Anket sayfalarını import ediyoruz
+import { AboutComponent } from './pages/about/about.component';
 import { SurveyCreateComponent } from './pages/surveys/survey-create/survey-create.component';
 import { SurveyEditComponent } from './pages/surveys/survey-edit/survey-edit.component';
 import { SurveyListComponent } from './pages/surveys/survey-list/survey-list.component';
 import { SurveyTakeComponent } from './pages/surveys/survey-take/survey-take.component';
-import { AboutComponent } from './pages/about/about.component';
 
 
 import { AiAnalysisComponent } from './pages/ai-analysis/ai-analysis.component'; // <-- AI Analysis Component'i import edin
@@ -55,6 +56,9 @@ export const routes: Routes = [
       { path: 'ai-analysis', component: AiAnalysisComponent },
       { path: 'ai-analysis/:id', component: AiAnalysisComponent }, // ID ile analiz
 
+
+         // Ayarlar rotası eklendi
+      { path: 'settings', component: SettingsComponent }
     ]
   },
   
@@ -68,5 +72,5 @@ export const routes: Routes = [
 
   // ** En sona eklenmeli! **
   // Tanımlanan yollar dışında kalan tüm istekleri 404 sayfasına yönlendirir
-  { path: '**', component: NotFoundComponent }
+  { path: '', component: NotFoundComponent }
 ];

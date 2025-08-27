@@ -121,6 +121,20 @@ export class SurveyService {
         );
     }
 
+    // Aktiflik durumunu backend'deki toggle-active PUT endpointi ile güncelle
+    toggleSurveyActiveStatus(id: number, isActive: boolean): Observable<any> {
+        console.log('🔁 Toggling survey active status via PUT toggle-active:', id, isActive);
+        return this.apiService.toggleSurveyActiveStatus(id, isActive).pipe(
+            tap(() => {
+                this.refreshSurveys();
+            }),
+            catchError(error => {
+                console.error('❌ Error toggling survey active status:', error);
+                throw error;
+            })
+        );
+    }
+
     deleteSurvey(id: number): Observable<any> {
         console.log('🗑️ Deleting survey:', id);
         

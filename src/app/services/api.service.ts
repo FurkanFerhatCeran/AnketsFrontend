@@ -1,321 +1,361 @@
-// src/app/services/api.service.ts
 
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { AIAnalysisResponse } from '../models/ai-analysis/ai-analysis.model'; // Yeni eklendi
+import { AIAnalysisResponse } from '../models/ai-analysis/ai-analysis.model';
 import { QuestionType } from '../models/question-type.model';
 import { CreateQuestionRequest, QuestionResponse, UpdateQuestionRequest } from '../models/survey/question.model';
 
 // API Endpoints sabitleri
 export const API_ENDPOINTS = {
-  // Authentication endpoints
-  AUTH: {
-    REGISTER: '/api/Auth/register',
-    LOGIN: '/api/Auth/login',
-    LOGOUT: '/api/Auth/logout',
-    FORGOT_PASSWORD: '/api/Auth/forgot-password',
-    RESET_PASSWORD: '/api/Auth/reset-password',
-    TEST: '/api/Auth/test'
-  },
+  // Authentication endpoints
+  AUTH: {
+    REGISTER: '/api/Auth/register',
+    LOGIN: '/api/Auth/login',
+    LOGOUT: '/api/Auth/logout',
+    FORGOT_PASSWORD: '/api/Auth/forgot-password',
+    RESET_PASSWORD: '/api/Auth/reset-password',
+    TEST: '/api/Auth/test'
+  },
 
-  // Survey Categories endpoints
-  SURVEY_CATEGORIES: {
-    GET_ALL: '/api/SurveyCategories',
-    CREATE: '/api/SurveyCategories',
-    GET_BY_ID: (id: number) => `/api/SurveyCategories/${id}`,
-    UPDATE: (id: number) => `/api/SurveyCategories/${id}`,
-    DELETE: (id: number) => `/api/SurveyCategories/${id}`,
-    IMPORT: '/api/SurveyCategories/import',
-    IMPORT_EXCEL: '/api/SurveyCategories/import-excel'
-  },
+  // Survey Categories endpoints
+  SURVEY_CATEGORIES: {
+    GET_ALL: '/api/SurveyCategories',
+    CREATE: '/api/SurveyCategories',
+    GET_BY_ID: (id: number) => `/api/SurveyCategories/${id}`,
+    UPDATE: (id: number) => `/api/SurveyCategories/${id}`,
+    DELETE: (id: number) => `/api/SurveyCategories/${id}`,
+    IMPORT: '/api/SurveyCategories/import',
+    IMPORT_EXCEL: '/api/SurveyCategories/import-excel'
+  },
 
-  // Surveys endpoints  
-  SURVEYS: {
-    GET_ALL: '/api/Surveys',
-    CREATE: '/api/Surveys',
-    GET_BY_ID: (id: number) => `/api/Surveys/${id}`,
-    UPDATE: (id: number) => `/api/Surveys/${id}`,
-    DELETE: (id: number) => `/api/Surveys/${id}`
-  },
+  // Surveys endpoints  
+  SURVEYS: {
+    GET_ALL: '/api/Surveys',
+    CREATE: '/api/Surveys',
+    GET_BY_ID: (id: number) => `/api/Surveys/${id}`,
+    UPDATE: (id: number) => `/api/Surveys/${id}`,
+    DELETE: (id: number) => `/api/Surveys/${id}`,
+    // Yeni endpoint: Aktiflik durumunu değiştirmek için
+    TOGGLE_ACTIVE: (id: number) => `/api/Surveys/toggle-active/${id}`
+  },
 
-  // Survey Responses endpoints  
-  SURVEY_RESPONSES: {
-    SUBMIT: '/api/SurveyResponses',
-    GET_BY_SURVEY: (surveyId: number) => `/api/SurveyResponses/survey/${surveyId}`,
-    GET_BY_ID: (id: number) => `/api/SurveyResponses/${id}`,
-    DELETE: (id: number) => `/api/SurveyResponses/${id}`,
-    GET_STATISTICS: (surveyId: number) => `/api/SurveyResponses/statistics/${surveyId}`
-  },
+  // Survey Responses endpoints  
+  SURVEY_RESPONSES: {
+    SUBMIT: '/api/SurveyResponses',
+    GET_BY_SURVEY: (surveyId: number) => `/api/SurveyResponses/survey/${surveyId}`,
+    GET_BY_ID: (id: number) => `/api/SurveyResponses/${id}`,
+    DELETE: (id: number) => `/api/SurveyResponses/${id}`,
+    GET_STATISTICS: (surveyId: number) => `/api/SurveyResponses/statistics/${surveyId}`
+  },
 
-  // Dashboard/Analytics endpoints
-  DASHBOARD: {
-    GET_STATS: '/api/Dashboard/stats',
-    GET_USER_SURVEYS: '/api/Dashboard/user-surveys'
-  },
+  // Dashboard/Analytics endpoints
+  DASHBOARD: {
+    GET_STATS: '/api/Dashboard/stats',
+    GET_USER_SURVEYS: '/api/Dashboard/user-surveys'
+  },
 
-  // Questions endpoints
-  QUESTIONS: {
-    CREATE: '/api/questions',
-    UPDATE: (id: number) => `/api/questions/${id}`,
-    DELETE: (id: number) => `/api/questions/${id}`,
-    GET_BY_ID: (id: number) => `/api/questions/${id}`,
-    GET_BY_SURVEY: (surveyId: number) => `/api/questions/by-survey/${surveyId}`,
-    GET_TYPES: '/api/questiontypes'
-  },
+  // Questions endpoints
+  QUESTIONS: {
+    CREATE: '/api/questions',
+    UPDATE: (id: number) => `/api/questions/${id}`,
+    DELETE: (id: number) => `/api/questions/${id}`,
+    GET_BY_ID: (id: number) => `/api/questions/${id}`,
+    GET_BY_SURVEY: (surveyId: number) => `/api/questions/by-survey/${surveyId}`,
+    GET_TYPES: '/api/questiontypes'
+  },
 
-  // Mevcut endpoint grupları
-  SURVEY_SETTINGS: {
-    UPDATE: (surveyId: number) => `/api/surveys/${surveyId}/settings`,
-    GET_SETTINGS: (surveyId: number) => `/api/surveys/${surveyId}/settings`
-  },
+  // Yeni eklenecek kısım
+  USER_SETTINGS: {
+    GET: '/api/Settings',
+    UPDATE: '/api/Settings',
+    DEACTIVATE: '/api/Settings/deactivate'
+  },
+  
+  // Mevcut endpoint grupları
+  SURVEY_SETTINGS: {
+    UPDATE: (surveyId: number) => `/api/surveys/${surveyId}/settings`,
+    GET_SETTINGS: (surveyId: number) => `/api/surveys/${surveyId}/settings`
+  },
 
-  ANALYTICS: {
-    GET_QUESTION_STATS: (questionId: number) => `/api/analytics/questions/${questionId}`,
-    GET_SURVEY_INSIGHTS: (surveyId: number) => `/api/analytics/surveys/${surveyId}/insights`,
-    
-    // Yeni eklenen AI analiz endpointleri
-    GET_SURVEY_ANALYTICS: '/api/Analytics/survey-analytics',
-    GET_TIME_SERIES: '/api/Analytics/time-series',
-    GET_DEMOGRAPHIC_ANALYSIS: '/api/Analytics/demographic-analysis',
-    GET_CORRELATION_ANALYSIS: '/api/Analytics/correlation-analysis',
-    GENERATE_AI_ANALYSIS: (surveyId: number) => `/api/Analytics/ai-analysis/${surveyId}`
-  } as const
+  ANALYTICS: {
+    GET_QUESTION_STATS: (questionId: number) => `/api/analytics/questions/${questionId}`,
+    GET_SURVEY_INSIGHTS: (surveyId: number) => `/api/analytics/surveys/${surveyId}/insights`,
+    
+    // Yeni eklenen AI analiz endpointleri
+    GET_SURVEY_ANALYTICS: '/api/Analytics/survey-analytics',
+    GET_TIME_SERIES: '/api/Analytics/time-series',
+    GET_DEMOGRAPHIC_ANALYSIS: '/api/Analytics/demographic-analysis',
+    GET_CORRELATION_ANALYSIS: '/api/Analytics/correlation-analysis',
+    GENERATE_AI_ANALYSIS: (surveyId: number) => `/api/Analytics/ai-analysis/${surveyId}`
+  } as const
 } as const;
 
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root'
 })
 export class ApiService {
-  private baseUrl = environment.apiUrl;
+  private baseUrl = environment.apiUrl;
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient) { }
 
-  // HTTP options ile authorization header
-  private getHttpOptions(): { headers: HttpHeaders } {
-    const token = this.getAuthToken();
-    let headers = new HttpHeaders({
-      'Content-Type': 'application/json',
-      'Accept': 'application/json'
-    });
+  // HTTP options ile authorization header
+  private getHttpOptions(): { headers: HttpHeaders } {
+    const token = this.getAuthToken();
+    let headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    });
 
-    if (token) {
-      headers = headers.set('Authorization', `Bearer ${token}`);
-    }
+    if (token) {
+      headers = headers.set('Authorization', `Bearer ${token}`);
+    }
 
-    return { headers };
-  }
+    return { headers };
+  }
 
-  // Auth token'ı al
-  private getAuthToken(): string | null {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('accessToken');
-    }
-    return null;
-  }
+  // Auth token'ı al
+  private getAuthToken(): string | null {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('accessToken');
+    }
+    return null;
+  }
 
-  // Generic HTTP methods
-  get<T>(endpoint: string): Observable<T> {
-    return this.http.get<T>(`${this.baseUrl}${endpoint}`, this.getHttpOptions());
-  }
+  // Yeni eklenecek metotlar
+  getUserSettings(): Observable<any> {
+    return this.get(API_ENDPOINTS.USER_SETTINGS.GET);
+  }
 
-  post<T>(endpoint: string, body: any): Observable<T> {
-    return this.http.post<T>(`${this.baseUrl}${endpoint}`, body, this.getHttpOptions());
-  }
+  updateUserSettings(settings: any): Observable<any> {
+    return this.put(API_ENDPOINTS.USER_SETTINGS.UPDATE, settings);
+  }
+  
+  deactivateUserAccount(): Observable<any> {
+    return this.delete(API_ENDPOINTS.USER_SETTINGS.DEACTIVATE);
+  }
 
-  put<T>(endpoint: string, body: any): Observable<T> {
-    return this.http.put<T>(`${this.baseUrl}${endpoint}`, body, this.getHttpOptions());
-  }
+  // Generic HTTP methods
+  get<T>(endpoint: string): Observable<T> {
+    return this.http.get<T>(`${this.baseUrl}${endpoint}`, this.getHttpOptions());
+  }
 
-  delete<T>(endpoint: string): Observable<T> {
-    return this.http.delete<T>(`${this.baseUrl}${endpoint}`, this.getHttpOptions());
-  }
+  post<T>(endpoint: string, body: any): Observable<T> {
+    return this.http.post<T>(`${this.baseUrl}${endpoint}`, body, this.getHttpOptions());
+  }
 
-  // File upload method
-  uploadFile<T>(endpoint: string, file: File, fieldName = 'file'): Observable<T> {
-    const formData = new FormData();
-    formData.append(fieldName, file);
+  put<T>(endpoint: string, body: any): Observable<T> {
+    return this.http.put<T>(`${this.baseUrl}${endpoint}`, body, this.getHttpOptions());
+  }
 
-    const token = this.getAuthToken();
-    let headers = new HttpHeaders();
-    if (token) {
-      headers = headers.set('Authorization', `Bearer ${token}`);
-    }
+  // ÖNEMLİ: boolean body'si için özel put metodu
+  putWithBooleanBody<T>(endpoint: string, body: boolean): Observable<T> {
+    const token = this.getAuthToken();
+    let headers = new HttpHeaders({
+      'Content-Type': 'application/json', // Bu satır çok önemli!
+      'Accept': 'application/json'
+    });
+    if (token) {
+      headers = headers.set('Authorization', `Bearer ${token}`);
+    }
+    // Boolean değeri doğrudan string olarak gönderiyoruz
+    return this.http.put<T>(`${this.baseUrl}${endpoint}`, body, { headers });
+  }
 
-    return this.http.post<T>(`${this.baseUrl}${endpoint}`, formData, { headers });
-  }
+  delete<T>(endpoint: string): Observable<T> {
+    return this.http.delete<T>(`${this.baseUrl}${endpoint}`, this.getHttpOptions());
+  }
 
-  // 🔐 AUTHENTICATION METHODS
-  register(payload: any): Observable<any> {
-    return this.post(API_ENDPOINTS.AUTH.REGISTER, payload);
-  }
+  // File upload method
+  uploadFile<T>(endpoint: string, file: File, fieldName = 'file'): Observable<T> {
+    const formData = new FormData();
+    formData.append(fieldName, file);
 
-  login(payload: any): Observable<any> {
-    return this.post(API_ENDPOINTS.AUTH.LOGIN, payload);
-  }
+    const token = this.getAuthToken();
+    let headers = new HttpHeaders();
+    if (token) {
+      headers = headers.set('Authorization', `Bearer ${token}`);
+    }
 
-  logout(payload: any): Observable<any> {
-    return this.post(API_ENDPOINTS.AUTH.LOGOUT, payload);
-  }
+    return this.http.post<T>(`${this.baseUrl}${endpoint}`, formData, { headers });
+  }
 
-  forgotPassword(email: string): Observable<any> {
-    return this.post(API_ENDPOINTS.AUTH.FORGOT_PASSWORD, { email });
-  }
+  // 🔐 AUTHENTICATION METHODS
+  register(payload: any): Observable<any> {
+    return this.post(API_ENDPOINTS.AUTH.REGISTER, payload);
+  }
 
-  resetPassword(payload: any): Observable<any> {
-    return this.post(API_ENDPOINTS.AUTH.RESET_PASSWORD, payload);
-  }
+  login(payload: any): Observable<any> {
+    return this.post(API_ENDPOINTS.AUTH.LOGIN, payload);
+  }
 
-  testAuth(): Observable<any> {
-    return this.get(API_ENDPOINTS.AUTH.TEST);
-  }
+  logout(payload: any): Observable<any> {
+    return this.post(API_ENDPOINTS.AUTH.LOGOUT, payload);
+  }
 
-  // 📂 SURVEY CATEGORIES METHODS
-  getSurveyCategories(): Observable<any> {
-    return this.get(API_ENDPOINTS.SURVEY_CATEGORIES.GET_ALL);
-  }
+  forgotPassword(email: string): Observable<any> {
+    return this.post(API_ENDPOINTS.AUTH.FORGOT_PASSWORD, { email });
+  }
 
-  createSurveyCategory(categoryData: any): Observable<any> {
-    return this.post(API_ENDPOINTS.SURVEY_CATEGORIES.CREATE, categoryData);
-  }
+  resetPassword(payload: any): Observable<any> {
+    return this.post(API_ENDPOINTS.AUTH.RESET_PASSWORD, payload);
+  }
 
-  getSurveyCategoryById(id: number): Observable<any> {
-    return this.get(API_ENDPOINTS.SURVEY_CATEGORIES.GET_BY_ID(id));
-  }
+  testAuth(): Observable<any> {
+    return this.get(API_ENDPOINTS.AUTH.TEST);
+  }
 
-  updateSurveyCategory(id: number, categoryData: any): Observable<any> {
-    return this.put(API_ENDPOINTS.SURVEY_CATEGORIES.UPDATE(id), categoryData);
-  }
+  // 📂 SURVEY CATEGORIES METHODS
+  getSurveyCategories(): Observable<any> {
+    return this.get(API_ENDPOINTS.SURVEY_CATEGORIES.GET_ALL);
+  }
 
-  deleteSurveyCategory(id: number): Observable<any> {
-    return this.delete(API_ENDPOINTS.SURVEY_CATEGORIES.DELETE(id));
-  }
+  createSurveyCategory(categoryData: any): Observable<any> {
+    return this.post(API_ENDPOINTS.SURVEY_CATEGORIES.CREATE, categoryData);
+  }
 
-  importSurveyCategories(categories: any[]): Observable<any> {
-    return this.post(API_ENDPOINTS.SURVEY_CATEGORIES.IMPORT, { categories });
-  }
+  getSurveyCategoryById(id: number): Observable<any> {
+    return this.get(API_ENDPOINTS.SURVEY_CATEGORIES.GET_BY_ID(id));
+  }
 
-  importSurveyCategoriesFromExcel(file: File): Observable<any> {
-    return this.uploadFile(API_ENDPOINTS.SURVEY_CATEGORIES.IMPORT_EXCEL, file);
-  }
+  updateSurveyCategory(id: number, categoryData: any): Observable<any> {
+    return this.put(API_ENDPOINTS.SURVEY_CATEGORIES.UPDATE(id), categoryData);
+  }
 
-  // 📋 SURVEYS METHODS
-  getSurveys(): Observable<any> {
-    return this.get(API_ENDPOINTS.SURVEYS.GET_ALL);
-  }
+  deleteSurveyCategory(id: number): Observable<any> {
+    return this.delete(API_ENDPOINTS.SURVEY_CATEGORIES.DELETE(id));
+  }
 
-  createSurvey(surveyData: any): Observable<any> {
-    return this.post(API_ENDPOINTS.SURVEYS.CREATE, surveyData);
-  }
+  importSurveyCategories(categories: any[]): Observable<any> {
+    return this.post(API_ENDPOINTS.SURVEY_CATEGORIES.IMPORT, { categories });
+  }
 
-  getSurveyById(id: number): Observable<any> {
-    return this.get(API_ENDPOINTS.SURVEYS.GET_BY_ID(id));
-  }
+  importSurveyCategoriesFromExcel(file: File): Observable<any> {
+    return this.uploadFile(API_ENDPOINTS.SURVEY_CATEGORIES.IMPORT_EXCEL, file);
+  }
 
-  updateSurvey(id: number, surveyData: any): Observable<any> {
-    return this.put(API_ENDPOINTS.SURVEYS.UPDATE(id), surveyData);
-  }
+  // 📋 SURVEYS METHODS
+  getSurveys(): Observable<any> {
+    return this.get(API_ENDPOINTS.SURVEYS.GET_ALL);
+  }
 
-  deleteSurvey(id: number): Observable<any> {
-    return this.delete(API_ENDPOINTS.SURVEYS.DELETE(id));
-  }
+  createSurvey(surveyData: any): Observable<any> {
+    return this.post(API_ENDPOINTS.SURVEYS.CREATE, surveyData);
+  }
 
-  // 📝 SURVEY RESPONSES METHODS
-  submitSurveyResponse(responseData: any): Observable<any> {
-    return this.post(API_ENDPOINTS.SURVEY_RESPONSES.SUBMIT, responseData);
-  }
+  getSurveyById(id: number): Observable<any> {
+    return this.get(API_ENDPOINTS.SURVEYS.GET_BY_ID(id));
+  }
 
-  getSurveyResponses(surveyId: number): Observable<any> {
-    return this.get(API_ENDPOINTS.SURVEY_RESPONSES.GET_BY_SURVEY(surveyId));
-  }
+  updateSurvey(id: number, surveyData: any): Observable<any> {
+    return this.put(API_ENDPOINTS.SURVEYS.UPDATE(id), surveyData);
+  }
 
-  getSurveyResponseById(id: number): Observable<any> {
-    return this.get(API_ENDPOINTS.SURVEY_RESPONSES.GET_BY_ID(id));
-  }
+  deleteSurvey(id: number): Observable<any> {
+    return this.delete(API_ENDPOINTS.SURVEYS.DELETE(id));
+  }
 
-  deleteSurveyResponse(id: number): Observable<any> {
-    return this.delete(API_ENDPOINTS.SURVEY_RESPONSES.DELETE(id));
-  }
+  // Anketin aktiflik durumunu değiştiren metot
+  toggleSurveyActiveStatus(surveyId: number, isActive: boolean): Observable<any> {
+    return this.putWithBooleanBody(API_ENDPOINTS.SURVEYS.TOGGLE_ACTIVE(surveyId), isActive);
+  }
 
-  getSurveyStatistics(surveyId: number): Observable<any> {
-    return this.get(API_ENDPOINTS.SURVEY_RESPONSES.GET_STATISTICS(surveyId));
-  }
+  // 📝 SURVEY RESPONSES METHODS
+  submitSurveyResponse(responseData: any): Observable<any> {
+    return this.post(API_ENDPOINTS.SURVEY_RESPONSES.SUBMIT, responseData);
+  }
 
-  // 📊 DASHBOARD METHODS
-  getDashboardStats(): Observable<any> {
-    return this.get(API_ENDPOINTS.DASHBOARD.GET_STATS);
-  }
+  getSurveyResponses(surveyId: number): Observable<any> {
+    return this.get(API_ENDPOINTS.SURVEY_RESPONSES.GET_BY_SURVEY(surveyId));
+  }
 
-  getUserSurveys(): Observable<any> {
-    return this.get(API_ENDPOINTS.DASHBOARD.GET_USER_SURVEYS);
-  }
+  getSurveyResponseById(id: number): Observable<any> {
+    return this.get(API_ENDPOINTS.SURVEY_RESPONSES.GET_BY_ID(id));
+  }
 
-  // ❓ QUESTIONS METHODS
-  createQuestion(questionData: CreateQuestionRequest): Observable<QuestionResponse> {
-    return this.post<QuestionResponse>(API_ENDPOINTS.QUESTIONS.CREATE, questionData);
-  }
+  deleteSurveyResponse(id: number): Observable<any> {
+    return this.delete(API_ENDPOINTS.SURVEY_RESPONSES.DELETE(id));
+  }
 
-  updateQuestion(id: number, questionData: UpdateQuestionRequest): Observable<QuestionResponse> {
-    return this.put<QuestionResponse>(API_ENDPOINTS.QUESTIONS.UPDATE(id), questionData);
-  }
+  getSurveyStatistics(surveyId: number): Observable<any> {
+    return this.get(API_ENDPOINTS.SURVEY_RESPONSES.GET_STATISTICS(surveyId));
+  }
 
-  deleteQuestion(id: number): Observable<void> {
-    return this.delete<void>(API_ENDPOINTS.QUESTIONS.DELETE(id));
-  }
+  // 📊 DASHBOARD METHODS
+  getDashboardStats(): Observable<any> {
+    return this.get(API_ENDPOINTS.DASHBOARD.GET_STATS);
+  }
 
-  getQuestionById(id: number): Observable<QuestionResponse> {
-    return this.get<QuestionResponse>(API_ENDPOINTS.QUESTIONS.GET_BY_ID(id));
-  }
+  getUserSurveys(): Observable<any> {
+    return this.get(API_ENDPOINTS.DASHBOARD.GET_USER_SURVEYS);
+  }
 
-  getQuestionsBySurvey(surveyId: number): Observable<QuestionResponse[]> {
-    return this.get<QuestionResponse[]>(API_ENDPOINTS.QUESTIONS.GET_BY_SURVEY(surveyId));
-  }
+  // ❓ QUESTIONS METHODS
+  createQuestion(questionData: CreateQuestionRequest): Observable<QuestionResponse> {
+    return this.post<QuestionResponse>(API_ENDPOINTS.QUESTIONS.CREATE, questionData);
+  }
 
-  getQuestionTypes(): Observable<QuestionType[]> {
-    return this.get<QuestionType[]>(API_ENDPOINTS.QUESTIONS.GET_TYPES);
-  }
+  updateQuestion(id: number, questionData: UpdateQuestionRequest): Observable<QuestionResponse> {
+    return this.put<QuestionResponse>(API_ENDPOINTS.QUESTIONS.UPDATE(id), questionData);
+  }
 
-  // YENİ EKLENDİ: Anket ayarlarını güncelle
-  updateSurveySettings(surveyId: number, settings: any): Observable<any> {
-    return this.put(API_ENDPOINTS.SURVEY_SETTINGS.UPDATE(surveyId), settings);
-  }
-  
-  // YENİ EKLENDİ: Anket ayarlarını getir
-  getSurveySettings(surveyId: number): Observable<any> {
-    return this.get(API_ENDPOINTS.SURVEY_SETTINGS.GET_SETTINGS(surveyId));
-  }
-  
-  // YENİ EKLENDİ: Soru istatistiklerini getir
-  getQuestionStats(questionId: number): Observable<any> {
-    return this.get(API_ENDPOINTS.ANALYTICS.GET_QUESTION_STATS(questionId));
-  }
-  
-  // YENİ EKLENDİ: Anket içgörülerini getir
-  getSurveyInsights(surveyId: number): Observable<any> {
-    return this.get(API_ENDPOINTS.ANALYTICS.GET_SURVEY_INSIGHTS(surveyId));
-  }
+  deleteQuestion(id: number): Observable<void> {
+    return this.delete<void>(API_ENDPOINTS.QUESTIONS.DELETE(id));
+  }
 
-  // YENİ EKLENDİ: Yapay Zeka ile Anket Analizi
-  getSurveyAnalytics(request: any): Observable<any> {
-    return this.post(API_ENDPOINTS.ANALYTICS.GET_SURVEY_ANALYTICS, request);
-  }
+  getQuestionById(id: number): Observable<QuestionResponse> {
+    return this.get<QuestionResponse>(API_ENDPOINTS.QUESTIONS.GET_BY_ID(id));
+  }
 
-  getResponseTimeSeries(request: any): Observable<any> {
-    return this.post(API_ENDPOINTS.ANALYTICS.GET_TIME_SERIES, request);
-  }
+  getQuestionsBySurvey(surveyId: number): Observable<QuestionResponse[]> {
+    return this.get<QuestionResponse[]>(API_ENDPOINTS.QUESTIONS.GET_BY_SURVEY(surveyId));
+  }
 
-  getDemographicDistribution(request: any): Observable<any> {
-    return this.post(API_ENDPOINTS.ANALYTICS.GET_DEMOGRAPHIC_ANALYSIS, request);
-  }
+  getQuestionTypes(): Observable<QuestionType[]> {
+    return this.get<QuestionType[]>(API_ENDPOINTS.QUESTIONS.GET_TYPES);
+  }
 
-  getCorrelationAnalysis(request: any): Observable<any> {
-    return this.post(API_ENDPOINTS.ANALYTICS.GET_CORRELATION_ANALYSIS, request);
-  }
+  // YENİ EKLENDİ: Anket ayarlarını güncelle
+  updateSurveySettings(surveyId: number, settings: any): Observable<any> {
+    return this.put(API_ENDPOINTS.SURVEY_SETTINGS.UPDATE(surveyId), settings);
+  }
+  
+  // YENİ EKLENDİ: Anket ayarlarını getir
+  getSurveySettings(surveyId: number): Observable<any> {
+    return this.get(API_ENDPOINTS.SURVEY_SETTINGS.GET_SETTINGS(surveyId));
+  }
+  
+  // YENİ EKLENDİ: Soru istatistiklerini getir
+  getQuestionStats(questionId: number): Observable<any> {
+    return this.get(API_ENDPOINTS.ANALYTICS.GET_QUESTION_STATS(questionId));
+  }
+  
+  // YENİ EKLENDİ: Anket içgörülerini getir
+  getSurveyInsights(surveyId: number): Observable<any> {
+    return this.get(API_ENDPOINTS.ANALYTICS.GET_SURVEY_INSIGHTS(surveyId));
+  }
 
-  // YENİ EKLENDİ: Yapay Zeka ile Anket Analizi
-  generateAIAnalysis(surveyId: number): Observable<AIAnalysisResponse> {
-    return this.post<AIAnalysisResponse>(API_ENDPOINTS.ANALYTICS.GENERATE_AI_ANALYSIS(surveyId), {});
-  }
+  // YENİ EKLENDİ: Yapay Zeka ile Anket Analizi
+  getSurveyAnalytics(request: any): Observable<any> {
+    return this.post(API_ENDPOINTS.ANALYTICS.GET_SURVEY_ANALYTICS, request);
+  }
+
+  getResponseTimeSeries(request: any): Observable<any> {
+    return this.post(API_ENDPOINTS.ANALYTICS.GET_TIME_SERIES, request);
+  }
+
+  getDemographicDistribution(request: any): Observable<any> {
+    return this.post(API_ENDPOINTS.ANALYTICS.GET_DEMOGRAPHIC_ANALYSIS, request);
+  }
+
+  getCorrelationAnalysis(request: any): Observable<any> {
+    return this.post(API_ENDPOINTS.ANALYTICS.GET_CORRELATION_ANALYSIS, request);
+  }
+
+  // YENİ EKLENDİ: Yapay Zeka ile Anket Analizi
+  generateAIAnalysis(surveyId: number): Observable<AIAnalysisResponse> {
+    return this.post<AIAnalysisResponse>(API_ENDPOINTS.ANALYTICS.GENERATE_AI_ANALYSIS(surveyId), {});
+  }
 }
