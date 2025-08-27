@@ -140,9 +140,21 @@
 
 .templates-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 24px;
   margin-bottom: 32px;
+  
+  @media (min-width: 1400px) {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  
+  @media (min-width: 1000px) and (max-width: 1399px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  @media (min-width: 700px) and (max-width: 999px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 .template-card {
@@ -168,6 +180,18 @@
       mat-icon {
         color: white;
       }
+      
+      .template-emoji {
+        transform: scale(1.1);
+      }
+    }
+  }
+  
+  &.popular {
+    border: 2px solid #f59e0b;
+    
+    .template-badge {
+      animation: pulse 2s infinite;
     }
   }
   
@@ -190,6 +214,11 @@
         height: 32px;
         color: #667eea;
         transition: all 0.3s ease;
+      }
+      
+      .template-emoji {
+        font-size: 32px;
+        line-height: 1;
       }
     }
   }
@@ -223,11 +252,23 @@
   .template-footer {
     border-top: 1px solid #e2e8f0;
     padding-top: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     
     .template-stats {
       font-size: 0.85rem;
       color: #94a3b8;
       font-weight: 500;
+    }
+    
+    .template-category {
+      background: #f1f5f9;
+      color: #475569;
+      padding: 4px 8px;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      font-weight: 600;
     }
   }
 }
@@ -382,7 +423,7 @@
   }
   
   .templates-grid {
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   }
 }
 
@@ -450,5 +491,17 @@
   
   .template-card {
     padding: 20px;
+  }
+}
+
+// Animasyonlar
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
   }
 }

@@ -2,17 +2,19 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { catchError, forkJoin, of } from 'rxjs';
+import { SurveyTemplateSelectorComponent } from '../../../components/survey/survey-template-selector/survey-template-selector.component';
 import { QuestionType } from '../../../models/question-type.model';
 import { Question, Survey } from '../../../models/survey/survey.model';
 import { QuestionService } from '../../../services/question.service';
 import { SurveyService } from '../../../services/survey.service';
+import { SurveyTemplate, SurveyTemplateService } from '../../../services/survey-template.service';
 
 @Component({
     selector: 'app-survey-create',
     standalone: true,
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, SurveyTemplateSelectorComponent],
     templateUrl: './survey-create.component.html',
     styleUrls: ['./survey-create.component.scss']
 })
@@ -26,24 +28,67 @@ export class SurveyCreateComponent implements OnInit {
     
     questionTypes: QuestionType[] = [];
     isSaving = false;
+    showTemplateSelector = true;
+    selectedTemplate: SurveyTemplate | null = null;
 
     constructor(
         private surveyService: SurveyService,
         private questionService: QuestionService,
-        private router: Router
+        private templateService: SurveyTemplateService,
+        private router: Router,
+        private route: ActivatedRoute
     ) {}
 
     ngOnInit(): void {
         this.questionService.getQuestionTypes().subscribe({
             next: (types) => {
                 this.questionTypes = types;
-                // Varsayılan soru tipi bilgilerini de ekleyelim
-                if (this.survey.questions && this.survey.questions.length === 0) {
-                    this.addQuestion();
-                }
+                
+                // Query params'dan template kontrol et
+                this.checkForPreSelectedTemplate();
             },
             error: (err) => {
                 console.error('Soru tipleri yüklenemedi:', err);
+                // Varsayılan soru ekle eğer template yükleme başarısız olursa
+                this.addQuestion();
+            }
+        });
+    }
+
+    private checkForPreSelectedTemplate(): void {
+        // Query params'ları kontrol et
+        this.route.queryParams.subscribe(params => {
+            const templateId = params['template'];
+            const isDirect = params['direct'] === 'true';
+            
+            if (templateId && isDirect) {
+                // Template'ı ID'ye göre yükle
+                this.templateService.getTemplateById(templateId).subscribe({
+                    next: (template) => {
+                        if (template) {
+                            this.selectedTemplate = template;
+                            this.onTemplateSelected(template);
+                            console.log('Template yüklendi:', template.name);
+                        } else {
+                            console.warn('Template bulunamadı:', templateId);
+                            // Template bulunamadığında normal mod'a geç
+                            this.showTemplateSelector = true;
+                            this.addQuestion();
+                        }
+                    },
+                    error: (err) => {
+                        console.error('Template yüklenirken hata:', err);
+                        alert('Template yüklenirken hata oluştu!');
+                        // Hata durumunda normal mod'a geç
+                        this.showTemplateSelector = true;
+                        this.addQuestion();
+                    }
+                });
+            } else {
+                // Template params yoksa normal template selector göster veya boş soru ekle
+                if (this.survey.questions && this.survey.questions.length === 0) {
+                    this.addQuestion();
+                }
             }
         });
     }
@@ -238,5 +283,51 @@ export class SurveyCreateComponent implements OnInit {
 
     trackByIndex(_i: number, _item: any): number {
         return _i;
+    }
+
+    onTemplateSelected(template: SurveyTemplate): void {
+        this.selectedTemplate = template;
+        this.templateService.createSurveyFromTemplate(template.id).subscribe({
+            next: (survey) => {
+                if (survey) {
+                    this.survey = survey;
+                    this.showTemplateSelector = false;
+                    console.log('Template yüklendi:', template.name);
+                    
+                    // Query params'ları temizle
+                    this.clearQueryParams();
+                }
+            },
+            error: (err) => {
+                console.error('Template yüklenirken hata:', err);
+                alert('Template yüklenirken hata oluştu!');
+            }
+        });
+    }
+
+    private clearQueryParams(): void {
+        this.router.navigate([], {
+            relativeTo: this.route,
+            queryParams: {},
+            replaceUrl: true
+        });
+    }
+
+    onCreateBlank(): void {
+        this.showTemplateSelector = false;
+        this.addQuestion(); // Boş anket için varsayılan soru ekle
+    }
+
+    backToTemplates(): void {
+        if (confirm('Değişiklikler kaybolacak. Template seçimine dönmek istediğinize emin misiniz?')) {
+            this.showTemplateSelector = true;
+            this.survey = {
+                title: '',
+                description: '',
+                questions: [],
+                isActive: true
+            };
+            this.selectedTemplate = null;
+        }
     }
 }

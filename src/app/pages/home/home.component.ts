@@ -6,6 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { SurveyService } from '../../services/survey.service';
+import { SurveyTemplate, SurveyTemplateService } from '../../services/survey-template.service';
 
 @Component({
   selector: 'app-home',
@@ -20,16 +21,19 @@ export class HomeComponent implements OnInit {
   activeSurveyCount: number = 0;
   totalResponses: number = 0;
   responseRate: number = 0;
+  popularTemplates: SurveyTemplate[] = [];
 
   constructor(
     private router: Router,
     private authService: AuthService,
-    private surveyService: SurveyService
+    private surveyService: SurveyService,
+    private templateService: SurveyTemplateService
   ) { }
 
   ngOnInit(): void {
     this.loadUserData();
     this.loadSurveyStats();
+    this.loadPopularTemplates();
   }
 
   private loadUserData(): void {
@@ -63,9 +67,25 @@ private loadSurveyStats(): void {
         this.responseRate = rate;
     });
 }
-  selectTemplate(templateType: string): void {
+
+  private loadPopularTemplates(): void {
+    this.templateService.getAllTemplates().subscribe({
+      next: (templates) => {
+        this.popularTemplates = templates;
+      },
+      error: (err) => {
+        console.error('Template\'lar yüklenirken hata:', err);
+      }
+    });
+  }
+
+  selectTemplate(template: SurveyTemplate): void {
+    // Template ID'sini query param olarak gönder
     this.router.navigate(['/dashboard/surveys/create'], { 
-      state: { template: templateType } 
+      queryParams: { 
+        template: template.id,
+        direct: 'true'
+      }
     });
   }
 
@@ -91,5 +111,13 @@ private loadSurveyStats(): void {
   private capitalizeString(str: string): string {
     if (!str) return '';
     return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+  }
+
+  getEstimatedTime(questionCount: number): number {
+    // Her soru için ortalama 30 saniye hesaplama
+    const secondsPerQuestion = 30;
+    const totalSeconds = questionCount * secondsPerQuestion;
+    const minutes = Math.ceil(totalSeconds / 60);
+    return Math.max(1, minutes); // Minimum 1 dakika
   }
 }

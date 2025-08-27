@@ -2,9 +2,30 @@
 <div class="survey-creator">
   <div class="creator-header">
     <h2>Yeni Anket Oluştur</h2>
+    <button *ngIf="!showTemplateSelector" type="button" class="btn-secondary back-btn" (click)="backToTemplates()">
+      ← Template Seçimine Dön
+    </button>
   </div>
 
-  <form (ngSubmit)="saveSurvey()" #surveyForm="ngForm">
+  <!-- Template Seçici -->
+  <div *ngIf="showTemplateSelector" class="template-selector-container">
+    <app-survey-template-selector 
+      (templateSelected)="onTemplateSelected($event)"
+      (createBlank)="onCreateBlank()">
+    </app-survey-template-selector>
+  </div>
+
+  <!-- Anket Oluşturma Formu -->
+  <div *ngIf="!showTemplateSelector">
+    <div *ngIf="selectedTemplate" class="selected-template-info">
+      <div class="template-badge">
+        <span class="template-icon">{{ selectedTemplate.icon }}</span>
+        <span class="template-name">{{ selectedTemplate.name }}</span>
+        <span class="template-category">{{ selectedTemplate.category }}</span>
+      </div>
+    </div>
+
+    <form (ngSubmit)="saveSurvey()" #surveyForm="ngForm">
     <div class="form-group">
       <label for="title">Anket Başlığı</label>
       <input id="title" type="text" [(ngModel)]="survey.title" name="title" required class="form-control">
@@ -147,8 +168,23 @@
             <input type="time" class="form-control" disabled>
           </div>
 
-          <!-- Rating (9) -->
+          <!-- Evet/Hayır (9) -->
           <div *ngSwitchCase="9" class="preview-container">
+            <label>Önizleme:</label>
+            <div class="yes-no-preview">
+              <label class="radio-option">
+                <input type="radio" name="yes-no-preview" value="yes" disabled>
+                Evet
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="yes-no-preview" value="no" disabled>
+                Hayır
+              </label>
+            </div>
+          </div>
+
+          <!-- Rating (10) -->
+          <div *ngSwitchCase="10" class="preview-container">
             <label>Önizleme:</label>
             <div class="rating-preview">
               <button type="button" class="rating-button" disabled>1</button>
@@ -228,5 +264,6 @@
         İptal
       </button>
     </div>
-  </form>
+    </form>
+  </div>
 </div>

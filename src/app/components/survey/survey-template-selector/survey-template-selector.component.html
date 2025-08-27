@@ -1,0 +1,81 @@
+<div class="template-selector">
+  <div class="selector-header">
+    <h3>Anket Şablonu Seçin</h3>
+    <p>Hızlı başlamak için hazır şablonlardan birini seçin<br>veya boş anket oluşturun</p>
+  </div>
+
+  <!-- Arama ve Filtreler -->
+  <div class="filters-section">
+    <div class="search-container">
+      <div class="search-wrapper">
+        <span class="search-icon">🔍</span>
+        <input 
+          type="text" 
+          [(ngModel)]="searchTerm" 
+          (ngModelChange)="onSearchChange()"
+          placeholder="Şablon ara..." 
+          class="search-input">
+      </div>
+    </div>
+
+    <div class="category-filter">
+      <div class="select-wrapper">
+        <select [(ngModel)]="selectedCategory" (ngModelChange)="onCategoryChange()" class="category-select">
+          <option *ngFor="let category of categories" [value]="category">
+            {{ category }}
+          </option>
+        </select>
+        <span class="select-arrow">▼</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="isLoading" class="loading-container">
+    <div class="loading-spinner"></div>
+    <p>Şablonlar yükleniyor...</p>
+  </div>
+
+  <!-- Template Kartları -->
+  <div *ngIf="!isLoading" class="templates-grid">
+    <!-- Boş Anket Kartı -->
+    <div class="template-card blank-template" (click)="createBlankSurvey()">
+      <div class="template-icon">✨</div>
+      <div class="template-content">
+        <h4>Boş Anket Oluştur</h4>
+        <p>Sıfırdan özel anketinizi oluşturun</p>
+      </div>
+      <div class="template-footer">
+        <span class="template-category">Özel</span>
+      </div>
+    </div>
+
+    <!-- Şablon Kartları -->
+    <div 
+      *ngFor="let template of filteredTemplates" 
+      class="template-card"
+      (click)="selectTemplate(template)">
+      <div class="template-icon">{{ template.icon }}</div>
+      <div class="template-content">
+        <h4>{{ template.name }}</h4>
+        <p>{{ template.description }}</p>
+        <div class="questions-count">
+          {{ template.questions.length }} soru
+        </div>
+      </div>
+      <div class="template-footer">
+        <span class="template-category">{{ template.category }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sonuç Bulunamadı -->
+  <div *ngIf="!isLoading && filteredTemplates.length === 0" class="no-results">
+    <div class="no-results-icon">📋</div>
+    <h4>Şablon bulunamadı</h4>
+    <p>Arama kriterlerinizi değiştirmeyi deneyin veya boş anket oluşturun</p>
+    <button class="btn-primary" (click)="createBlankSurvey()">
+      Boş Anket Oluştur
+    </button>
+  </div>
+</div>

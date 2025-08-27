@@ -35,88 +35,26 @@
     </div>
     
     <div class="templates-grid">
-      <!-- Müşteri Memnuniyeti Anketi -->
-      <div class="template-card" (click)="selectTemplate('customer_satisfaction')">
+      <!-- Dinamik Template Kartları -->
+      <div 
+        *ngFor="let template of popularTemplates; let i = index" 
+        class="template-card" 
+        (click)="selectTemplate(template)"
+        [class.popular]="i === 0">
         <div class="template-icon">
           <div class="icon-wrapper">
-            <mat-icon>sentiment_satisfied_alt</mat-icon>
+            <span class="template-emoji">{{ template.icon }}</span>
           </div>
         </div>
-        <h3>Müşteri Memnuniyeti</h3>
-        <p>Müşterilerinizin deneyimlerini ölçün ve geri bildirim toplayın</p>
-        <div class="template-badge">Popüler</div>
+        <h3>{{ template.name }}</h3>
+        <p>{{ template.description }}</p>
+        <div *ngIf="i === 0" class="template-badge">Popüler</div>
         <div class="template-footer">
-          <span class="template-stats">5 soru • 2 dakika</span>
-        </div>
-      </div>
-
-      <!-- Ürün Değerlendirme Anketi -->
-      <div class="template-card" (click)="selectTemplate('product_feedback')">
-        <div class="template-icon">
-          <div class="icon-wrapper">
-            <mat-icon>inventory_2</mat-icon>
-          </div>
-        </div>
-        <h3>Ürün Değerlendirme</h3>
-        <p>Ürünleriniz hakkında detaylı geri bildirim toplayın</p>
-        <div class="template-footer">
-          <span class="template-stats">7 soru • 3 dakika</span>
-        </div>
-      </div>
-
-      <!-- Pazar Araştırması Anketi -->
-      <div class="template-card" (click)="selectTemplate('market_research')">
-        <div class="template-icon">
-          <div class="icon-wrapper">
-            <mat-icon>trending_up</mat-icon>
-          </div>
-        </div>
-        <h3>Pazar Araştırması</h3>
-        <p>Pazar trendlerini ve tüketici tercihlerini analiz edin</p>
-        <div class="template-footer">
-          <span class="template-stats">8 soru • 4 dakika</span>
-        </div>
-      </div>
-
-      <!-- Etkinlik Değerlendirme Anketi -->
-      <div class="template-card" (click)="selectTemplate('event_feedback')">
-        <div class="template-icon">
-          <div class="icon-wrapper">
-            <mat-icon>event</mat-icon>
-          </div>
-        </div>
-        <h3>Etkinlik Değerlendirme</h3>
-        <p>Düzenlediğiniz etkinlikler hakkında geri bildirim alın</p>
-        <div class="template-footer">
-          <span class="template-stats">6 soru • 2 dakika</span>
-        </div>
-      </div>
-
-      <!-- Çalışan Memnuniyeti Anketi -->
-      <div class="template-card" (click)="selectTemplate('employee_satisfaction')">
-        <div class="template-icon">
-          <div class="icon-wrapper">
-            <mat-icon>groups</mat-icon>
-          </div>
-        </div>
-        <h3>Çalışan Memnuniyeti</h3>
-        <p>Çalışanlarınızın işyeri memnuniyetini ölçün</p>
-        <div class="template-footer">
-          <span class="template-stats">10 soru • 5 dakika</span>
-        </div>
-      </div>
-
-      <!-- Eğitim Değerlendirme Anketi -->
-      <div class="template-card" (click)="selectTemplate('training_evaluation')">
-        <div class="template-icon">
-          <div class="icon-wrapper">
-            <mat-icon>school</mat-icon>
-          </div>
-        </div>
-        <h3>Eğitim Değerlendirme</h3>
-        <p>Verdiğiniz eğitimlerin etkinliğini ölçün</p>
-        <div class="template-footer">
-          <span class="template-stats">6 soru • 3 dakika</span>
+          <span class="template-stats">
+            {{ template.questions.length }} soru • 
+            {{ getEstimatedTime(template.questions.length) }} dakika
+          </span>
+          <span class="template-category">{{ template.category }}</span>
         </div>
       </div>
     </div>
