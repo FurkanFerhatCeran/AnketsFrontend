@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { SurveyService } from '../../services/survey.service';
 import { SurveyTemplate, SurveyTemplateService } from '../../services/survey-template.service';
@@ -11,7 +11,7 @@ import { SurveyTemplate, SurveyTemplateService } from '../../services/survey-tem
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, MatIconModule, MatButtonModule],
+  imports: [CommonModule, MatIconModule, MatButtonModule, RouterModule],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss']
 })
@@ -87,6 +87,14 @@ private loadSurveyStats(): void {
         direct: 'true'
       }
     });
+  }
+
+  createBlankSurvey(): void {
+    this.router.navigate(['/dashboard/surveys/create']);
+  }
+
+  viewMySurveys(): void {
+    this.router.navigate(['/dashboard/surveys']);
   }
 
   private extractNameFromEmail(email: string): string {

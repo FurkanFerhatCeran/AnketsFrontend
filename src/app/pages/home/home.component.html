@@ -62,12 +62,12 @@
 
   <!-- Aksiyon Butonları -->
   <div class="actions-section">
-    <button mat-raised-button color="primary" routerLink="/dashboard/surveys/create" class="create-button">
+    <button mat-raised-button color="primary" (click)="createBlankSurvey()" class="create-button">
       <mat-icon>add</mat-icon> 
       <span>Boş Anket Oluştur</span>
     </button>
     
-    <button mat-stroked-button color="primary" routerLink="/dashboard/surveys" class="view-button">
+    <button mat-stroked-button color="primary" (click)="viewMySurveys()" class="view-button">
       <mat-icon>list</mat-icon>
       <span>Anketlerimi Görüntüle</span>
     </button>

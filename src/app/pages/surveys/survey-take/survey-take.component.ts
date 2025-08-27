@@ -246,9 +246,8 @@ export class SurveyTakeComponent implements OnInit {
     this.apiService.submitSurveyResponse(formData).subscribe({
       next: (response: any) => {
         this.submitting = false;
-        this.router.navigate(['/survey-thank-you'], {
-          queryParams: { surveyId: this.survey.surveyId || this.survey.id }
-        });
+        alert('Anket başarıyla gönderildi! Teşekkür ederiz.');
+        this.router.navigate(['/dashboard/home']);
       },
       error: (error) => {
         console.error('Yanıt gönderilirken hata:', error);
@@ -264,7 +263,7 @@ export class SurveyTakeComponent implements OnInit {
       this.router.navigate(['/dashboard/surveys']);
     } else {
       if (confirm('Anketteki ilerlemeniz kaybolacak. Emin misiniz?')) {
-        this.router.navigate(['/surveys']);
+        this.router.navigate(['/dashboard/home']);
       }
     }
   }
@@ -279,7 +278,11 @@ export class SurveyTakeComponent implements OnInit {
   // Önizleme modunda anketi doldur sayfasına git
   navigateToTake(): void {
     if (this.survey) {
-      this.router.navigate(['/dashboard/surveys/take', this.survey.surveyId || this.survey.id]);
+      // Preview mode'dan çıkarak normal anket doldurma moduna geç
+      this.router.navigate(['/dashboard/surveys/take', this.survey.surveyId || this.survey.id], {
+        queryParams: { preview: null },
+        queryParamsHandling: 'merge'
+      });
     }
   }
 }

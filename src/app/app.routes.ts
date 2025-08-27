@@ -37,9 +37,8 @@ export const routes: Routes = [
     component: DashboardComponent,
     canActivate: [AuthGuard],
     children: [
-        { path: '', redirectTo: 'home', pathMatch: 'full' }, // Dashboard ana sayfa olarak home'u göster
-      { path: 'home', component: HomeComponent }, // ← Home route'u ekleyin
-      { path: '', redirectTo: 'surveys', pathMatch: 'full' }, // Dashboard ana sayfa olarak anketleri göster
+      { path: '', redirectTo: 'home', pathMatch: 'full' }, // Dashboard ana sayfa olarak home'u göster
+      { path: 'home', component: HomeComponent },
       { path: 'profile', component: ProfileComponent },
       
       // Anket ile ilgili sayfalar dashboard'un alt rotalarıdır
@@ -72,5 +71,5 @@ export const routes: Routes = [
 
   // ** En sona eklenmeli! **
   // Tanımlanan yollar dışında kalan tüm istekleri 404 sayfasına yönlendirir
-  { path: '', component: NotFoundComponent }
+  { path: '**', component: NotFoundComponent }
 ];
