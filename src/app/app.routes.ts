@@ -19,6 +19,9 @@ import { SurveyListComponent } from './pages/surveys/survey-list/survey-list.com
 import { SurveyTakeComponent } from './pages/surveys/survey-take/survey-take.component';
 import { AboutComponent } from './pages/about/about.component';
 
+
+import { AiAnalysisComponent } from './pages/ai-analysis/ai-analysis.component'; // <-- AI Analysis Component'i import edin
+
 export const routes: Routes = [
   // Giriş yapmadan erişilebilen yollar
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -46,6 +49,12 @@ export const routes: Routes = [
       
       // Hakkımızda sayfası eklendi
       { path: 'about', component: AboutComponent },
+
+
+            // Yapay Zeka Analiz rotası eklendi
+      { path: 'ai-analysis', component: AiAnalysisComponent },
+      { path: 'ai-analysis/:id', component: AiAnalysisComponent }, // ID ile analiz
+
     ]
   },
   

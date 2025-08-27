@@ -1,0 +1,41 @@
+<div class="ai-analysis-container">
+  <h2 class="title">📊 Yapay Zeka Anket Analizi</h2>
+  <p class="description">
+    Anket verilerinizi yapay zeka ile analiz edin, içgörü kazanın ve detaylı raporlar alın.
+  </p>
+
+  <!-- Anket Seçimi -->
+  <div class="survey-selection">
+    <mat-form-field appearance="outline" class="survey-select">
+      <mat-label>Analiz için anket seçin</mat-label>
+      <mat-select [(ngModel)]="selectedSurveyId" (selectionChange)="onSelectSurvey($event.value)">
+        <mat-option *ngFor="let survey of surveys" [value]="survey.surveyId">
+          {{ survey.title }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="isLoading" class="loading-spinner">
+    <mat-progress-spinner mode="indeterminate" diameter="60"></mat-progress-spinner>
+    <p>Analiz oluşturuluyor, lütfen bekleyin...</p>
+  </div>
+
+  <!-- Hata Mesajı -->
+  <mat-card *ngIf="errorMessage" class="error-card">
+    <mat-icon color="warn">error_outline</mat-icon>
+    <span>{{ errorMessage }}</span>
+  </mat-card>
+
+  <!-- Analiz Sonucu -->
+  <div *ngIf="aiAnalysisResult" class="analysis-results">
+    <h3>📑 Analiz Özeti</h3>
+    <mat-card class="result-card">
+      <h4>Yapay Zeka Analiz Sonuçları</h4>
+      <div class="result-content">
+        <pre>{{ aiAnalysisResult.aiResponse }}</pre>
+      </div>
+    </mat-card>
+  </div>
+</div>
