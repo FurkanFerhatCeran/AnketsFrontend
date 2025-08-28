@@ -673,7 +673,7 @@
         border: none;
         border-radius: 16px;
         padding: 1rem 2rem;
-        color: white;
+        color: rgb(9, 9, 9);
         font-weight: 600;
         cursor: pointer;
         display: flex;
@@ -696,24 +696,25 @@
       }
       
       .btn-secondary-empty {
-        background: rgba(255, 255, 255, 0.1); // Şeffaf beyaz
-        backdrop-filter: blur(10px);
-        border: 2px solid rgba(255, 255, 255, 0.3);
+        background: var(--primary-gradient);
+        border: none;
         border-radius: 16px;
         padding: 1rem 2rem;
-        color: var(--text-white); // Beyaz yazı
+        color: rgb(9, 9, 9);
         font-weight: 600;
         cursor: pointer;
         display: flex;
         align-items: center;
         gap: 0.5rem;
         transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
         
         &:hover {
-          background: rgba(255, 255, 255, 0.2);
-          border-color: rgba(255, 255, 255, 0.5);
-          transform: translateY(-1px);
-          box-shadow: 0 4px 15px rgba(255, 255, 255, 0.1);
+          transform: translateY(-2px);
+          box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+          background: var(--success-gradient); // Hover'da yeşil gradient
         }
         
         .btn-icon {
