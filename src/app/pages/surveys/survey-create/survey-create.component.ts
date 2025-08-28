@@ -159,15 +159,15 @@ export class SurveyCreateComponent implements OnInit {
                 surveyId: surveyId,
                 questionTypeId: Number(question.questionTypeId),
                 isRequired: question.isRequired,
-                conditionalLogic: question.conditionalLogic,
-                validationRules: question.validationRules,
+                conditionalLogic: question.conditionalLogic || '',
+                validationRules: question.validationRules || null,
                 options: (question.options || []).map((o, index) => ({
-                    optionText: o.optionText,
-                    optionValue: o.optionValue || o.optionText,
-                    imageUrl: '',
+                    optionText: o.optionText || '',
+                    optionValue: o.optionValue || o.optionText || '',
+                    imageUrl: o.imageUrl || '',
                     sortOrder: index,
                     isOtherOption: o.isOtherOption || false,
-                    conditionalLogic: o.conditionalLogic
+                    conditionalLogic: o.conditionalLogic || ''
                 }))
             };
             
@@ -186,20 +186,19 @@ export class SurveyCreateComponent implements OnInit {
         }
 
         forkJoin(requests).subscribe({
-            next: (responses) => {
-                const failedRequests = responses.filter(r => r === null).length;
-                if (failedRequests > 0) {
-                    alert(`Anket oluşturuldu, ancak ${failedRequests} adet soru kaydedilemedi.`);
-                } else {
-                    alert('Anket ve tüm sorular başarıyla kaydedildi!');
-                }
+            next: (results) => {
                 this.isSaving = false;
-                this.router.navigate(['/dashboard/surveys']);
+                if (results.every(result => result !== null)) {
+                    alert('Anket başarıyla oluşturuldu!');
+                    this.router.navigate(['/dashboard/surveys']);
+                } else {
+                    alert('Bazı sorular kaydedilemedi. Lütfen kontrol edin.');
+                }
             },
             error: (error) => {
-                console.error('Soruları kaydederken genel bir hata oluştu:', error);
-                alert('Soruları kaydederken genel bir hata oluştu!');
+                console.error('Sorular kaydedilirken hata oluştu:', error);
                 this.isSaving = false;
+                alert('Sorular kaydedilirken bir hata oluştu!');
             }
         });
     }
@@ -228,7 +227,9 @@ export class SurveyCreateComponent implements OnInit {
             optionText: '',
             optionValue: '',
             sortOrder: question.options.length,
-            imageUrl: ''
+            imageUrl: '',
+            isOtherOption: false,
+            conditionalLogic: ''
         });
     }
 

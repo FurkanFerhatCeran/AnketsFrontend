@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { catchError, forkJoin, of } from 'rxjs';
+import { catchError, forkJoin, of, Observable } from 'rxjs';
 
 import { QuestionType } from '../../../models/question-type.model';
 import { ApiService } from '../../../services/api.service';
@@ -240,36 +240,83 @@ export class SurveyEditComponent implements OnInit {
     }
 
     updateQuestions(): void {
-        const requests = this.survey.questions.map((question: any) => {
-            const payload: any = {
-                questionTitle: question.questionTitle,
-                questionDescription: question.questionDescription || '',
-                surveyId: this.survey.id,
+        const requests: Observable<any>[] = this.survey.questions.map((question: any) => {
+            // Temiz bir payload oluştur
+            const cleanPayload: any = {
+                questionTitle: String(question.questionTitle || '').trim(),
+                questionDescription: String(question.questionDescription || '').trim(),
+                surveyId: Number(this.survey.id),
                 questionTypeId: Number(question.questionTypeId),
-                isRequired: question.isRequired,
-                conditionalLogic: question.conditionalLogic || '',
-                validationRules: question.validationRules || null,
-                options: (question.options || []).map((o: any, i: number) => ({
-                    optionText: o.optionText,
-                    optionValue: o.optionValue ?? o.optionText,
-                    sortOrder: i,
-                    imageUrl: o.imageUrl ?? '',
-                    isOtherOption: o.isOtherOption ?? false,
-                    conditionalLogic: o.conditionalLogic ?? ''
-                }))
+                isRequired: Boolean(question.isRequired)
             };
+
+            // conditionalLogic için özel temizleme
+            if (question.conditionalLogic) {
+                let cleanConditionalLogic = String(question.conditionalLogic).trim();
+                // Çift tırnak sorununu çöz
+                if (cleanConditionalLogic === '""' || cleanConditionalLogic === "\"\"" || cleanConditionalLogic === '') {
+                    // Boş string olarak ayarla, property'yi hiç ekleme
+                } else {
+                    cleanPayload.conditionalLogic = cleanConditionalLogic;
+                }
+            }
+
+            // validationRules için özel temizleme
+            if (question.validationRules && question.validationRules !== null && question.validationRules.trim()) {
+                cleanPayload.validationRules = String(question.validationRules).trim();
+            }
+
+            // Options array'ini temizle
+            if (question.options && Array.isArray(question.options) && question.options.length > 0) {
+                cleanPayload.options = question.options
+                    .filter((o: any) => o && o.optionText && String(o.optionText).trim()) // Boş seçenekleri filtrele
+                    .map((o: any, i: number) => {
+                        const cleanOption: any = {
+                            optionText: String(o.optionText || '').trim(),
+                            optionValue: String(o.optionValue || o.optionText || '').trim(),
+                            sortOrder: i
+                        };
+
+                        // imageUrl sadece değer varsa ekle
+                        if (o.imageUrl && String(o.imageUrl).trim() && String(o.imageUrl).trim() !== '') {
+                            cleanOption.imageUrl = String(o.imageUrl).trim();
+                        }
+
+                        // isOtherOption sadece true ise ekle
+                        if (o.isOtherOption === true) {
+                            cleanOption.isOtherOption = true;
+                        }
+
+                        // conditionalLogic için özel temizleme
+                        if (o.conditionalLogic) {
+                            let cleanOptConditionalLogic = String(o.conditionalLogic).trim();
+                            if (cleanOptConditionalLogic !== '""' && cleanOptConditionalLogic !== "\"\"" && cleanOptConditionalLogic !== '') {
+                                cleanOption.conditionalLogic = cleanOptConditionalLogic;
+                            }
+                        }
+
+                        return cleanOption;
+                    });
+            } else {
+                cleanPayload.options = [];
+            }
+
+            // Debug için payload'u logla
+            console.log('Temizlenmiş payload:', JSON.stringify(cleanPayload, null, 2));
             
             if (question.questionId && question.questionId > 0) {
-                return this.questionService.updateQuestion(question.questionId, payload).pipe(
+                return this.questionService.updateQuestion(question.questionId, cleanPayload).pipe(
                     catchError(err => {
                         console.error('Soru güncellenirken hata oluştu:', err);
+                        console.error('Hatalı payload:', cleanPayload);
                         return of(null);
                     })
                 );
             } else {
-                return this.questionService.createQuestion(payload).pipe(
+                return this.questionService.createQuestion(cleanPayload).pipe(
                     catchError(err => {
                         console.error('Soru oluşturulurken hata oluştu:', err);
+                        console.error('Hatalı payload:', cleanPayload);
                         return of(null);
                     })
                 );
@@ -282,23 +329,22 @@ export class SurveyEditComponent implements OnInit {
             return;
         }
 
-        forkJoin(requests).subscribe({
-            next: (responses: any) => {
-                const failedCount = responses.filter((r: any) => r === null).length;
-                if (failedCount > 0) {
-                    alert(`${failedCount} adet soru kaydedilirken/güncellenirken hata oluştu.`);
+        forkJoin(requests).subscribe(
+            (results: any[]) => {
+                this.isSaving = false;
+                if (results.every((result: any) => result !== null)) {
+                    alert('Anket başarıyla güncellendi!');
+                    this.router.navigate(['/dashboard/surveys']);
                 } else {
-                    alert('Anket ve tüm sorular başarıyla güncellendi!');
+                    alert('Bazı sorular güncellenemedi. Lütfen kontrol edin.');
                 }
-                this.isSaving = false;
-                this.router.navigate(['/dashboard/surveys']);
             },
-            error: (error) => {
-                console.error('Sorular güncellenirken/oluşturulurken genel hata:', error);
+            (error: any) => {
+                console.error('Sorular güncellenirken hata oluştu:', error);
                 this.isSaving = false;
-                alert('Sorular güncellenirken/oluşturulurken genel hata oluştu!');
+                alert('Sorular güncellenirken bir hata oluştu!');
             }
-        });
+        );
     }
 
     cancel(): void {
