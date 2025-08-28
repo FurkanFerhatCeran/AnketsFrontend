@@ -45,6 +45,7 @@ export const API_ENDPOINTS = {
   SURVEY_RESPONSES: {
     SUBMIT: '/api/SurveyResponses',
     GET_BY_SURVEY: (surveyId: number) => `/api/SurveyResponses/survey/${surveyId}`,
+    GET_BY_SURVEY_PAGED: (surveyId: number) => `/api/SurveyResponses/by-survey/${surveyId}/paged`,
     GET_BY_ID: (id: number) => `/api/SurveyResponses/${id}`,
     DELETE: (id: number) => `/api/SurveyResponses/${id}`,
     GET_STATISTICS: (surveyId: number) => `/api/SurveyResponses/statistics/${surveyId}`
@@ -280,6 +281,17 @@ submitSurveyResponse(payload: any): Observable<any> {
 
   getSurveyResponses(surveyId: number): Observable<any> {
     return this.get(API_ENDPOINTS.SURVEY_RESPONSES.GET_BY_SURVEY(surveyId));
+  }
+
+  // NEW: Paged responses with optional filters
+  getSurveyResponsesPaged(surveyId: number, params?: { page?: number; pageSize?: number; startDate?: string; endDate?: string; }): Observable<any> {
+    const query = new URLSearchParams();
+    if (params?.page) query.set('page', String(params.page));
+    if (params?.pageSize) query.set('pageSize', String(params.pageSize));
+    if (params?.startDate) query.set('startDate', params.startDate);
+    if (params?.endDate) query.set('endDate', params.endDate);
+    const endpoint = `${API_ENDPOINTS.SURVEY_RESPONSES.GET_BY_SURVEY_PAGED(surveyId)}${query.toString() ? `?${query.toString()}` : ''}`;
+    return this.get(endpoint);
   }
 
   getSurveyResponseById(id: number): Observable<any> {

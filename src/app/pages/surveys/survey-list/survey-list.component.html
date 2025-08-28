@@ -100,10 +100,10 @@
                     
                     <button 
                         class="action-btn stats" 
-                        (click)="navigateToResults(survey.surveyId)" 
+                        (click)="navigateToResponses(survey.surveyId)" 
                         title="İstatistikler">
                         <span class="btn-icon">📊</span>
-                        <span class="btn-text">İstatistik</span>
+                        <span class="btn-text">Yanıtlar</span>
                     </button>
                     
                     <div class="action-dropdown" [class.open]="activeDropdown === survey.surveyId">

@@ -157,8 +157,8 @@ export class SurveyListComponent implements OnInit {
     });
   }
 
-  navigateToResults(surveyId: number): void {
-    this.router.navigate(['/dashboard/surveys/results', surveyId]);
+  navigateToResponses(surveyId: number): void {
+    this.router.navigate(['/dashboard/surveys/responses', surveyId]);
   }
 
   navigateToTake(surveyId: number): void {
