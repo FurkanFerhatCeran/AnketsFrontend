@@ -3,9 +3,9 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { combineLatest, forkJoin } from 'rxjs';
 import { QuestionType } from '../../../models/question-type.model';
 import { ApiService } from '../../../services/api.service';
-import { forkJoin, combineLatest } from 'rxjs';
 
 @Component({
   selector: 'app-survey-take',
@@ -19,6 +19,7 @@ export class SurveyTakeComponent implements OnInit {
   questionTypes: QuestionType[] = [];
   answers: { [key: number]: any } = {};
   respondentName: string = '';
+  respondentEmail: string = '';
   submitting = false;
   errors: number[] = [];
   isLoading = true;
@@ -141,6 +142,13 @@ export class SurveyTakeComponent implements OnInit {
 
   validateForm(): boolean {
     this.errors = [];
+    // E-posta gerekli: bir kez doldurma kontrolü için
+    const email = (this.respondentEmail || '').trim();
+    const emailOk = email.length > 0 && /.+@.+\..+/.test(email);
+    if (!emailOk) {
+      alert('Lütfen geçerli bir e‑posta adresi girin.');
+      return false;
+    }
     
     if (this.survey.questions) {
       this.survey.questions.forEach((question: any) => {
@@ -237,6 +245,7 @@ export class SurveyTakeComponent implements OnInit {
     const responseData = {
       surveyId: this.survey.surveyId || this.survey.id,
       respondentName: this.respondentName.trim() || 'Anonim',
+      email: this.respondentEmail.trim() || null,
       answers: answersData,
       submittedAt: new Date().toISOString()
     };

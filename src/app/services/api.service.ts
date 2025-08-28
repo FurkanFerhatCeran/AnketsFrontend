@@ -137,14 +137,22 @@ export class ApiService {
     return this.delete(API_ENDPOINTS.USER_SETTINGS.DEACTIVATE);
   }
 
-  // Generic HTTP methods
-  get<T>(endpoint: string): Observable<T> {
-    return this.http.get<T>(`${this.baseUrl}${endpoint}`, this.getHttpOptions());
-  }
+ // Generic HTTP methods
+get<T>(endpoint: string): Observable<T> {
+  return this.http.get<T>(`${this.baseUrl}${endpoint}`, this.getHttpOptions());
+}
 
-  post<T>(endpoint: string, body: any): Observable<T> {
-    return this.http.post<T>(`${this.baseUrl}${endpoint}`, body, this.getHttpOptions());
-  }
+post<T>(endpoint: string, body: any): Observable<T> {
+  return this.http.post<T>(`${this.baseUrl}${endpoint}`, body, this.getHttpOptions());
+}
+
+// YENİ: FormData POST metodu (Content-Type'ı elle vermiyoruz)
+private postFormData<T>(endpoint: string, formData: FormData): Observable<T> {
+  const token = this.getAuthToken();
+  let headers = new HttpHeaders();
+  if (token) headers = headers.set('Authorization', `Bearer ${token}`);
+  return this.http.post<T>(`${this.baseUrl}${endpoint}`, formData, { headers });
+}
 
   put<T>(endpoint: string, body: any): Observable<T> {
     return this.http.put<T>(`${this.baseUrl}${endpoint}`, body, this.getHttpOptions());
@@ -263,9 +271,12 @@ export class ApiService {
   }
 
   // 📝 SURVEY RESPONSES METHODS
-  submitSurveyResponse(responseData: any): Observable<any> {
-    return this.post(API_ENDPOINTS.SURVEY_RESPONSES.SUBMIT, responseData);
+submitSurveyResponse(payload: any): Observable<any> {
+  if (typeof FormData !== 'undefined' && payload instanceof FormData) {
+    return this.postFormData(API_ENDPOINTS.SURVEY_RESPONSES.SUBMIT, payload);
   }
+  return this.post(API_ENDPOINTS.SURVEY_RESPONSES.SUBMIT, payload);
+}
 
   getSurveyResponses(surveyId: number): Observable<any> {
     return this.get(API_ENDPOINTS.SURVEY_RESPONSES.GET_BY_SURVEY(surveyId));

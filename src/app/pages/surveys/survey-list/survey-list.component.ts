@@ -3,8 +3,9 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { catchError, map, switchMap } from 'rxjs/operators';
 import { Survey } from '../../../models/survey/survey.model';
+import { ApiService } from '../../../services/api.service';
 import { QuestionService } from '../../../services/question.service';
 import { SurveyService } from '../../../services/survey.service';
 
@@ -25,7 +26,8 @@ export class SurveyListComponent implements OnInit {
   constructor(
     private surveyService: SurveyService,
     private router: Router,
-    private questionService: QuestionService 
+    private questionService: QuestionService,
+    private apiService: ApiService 
   ) {}
 
   ngOnInit(): void {
@@ -61,6 +63,47 @@ export class SurveyListComponent implements OnInit {
         this.surveys = this.surveys.map(survey => {
           const questionCount = counts.find(c => c.surveyId === survey.surveyId)?.count || 0;
           return { ...survey, questionCount };
+        });
+        // Soru sayıları yüklendikten sonra yanıt sayılarını da getir
+        this.loadResponseCounts();
+      });
+    } else {
+      this.isLoading = false;
+    }
+  }
+
+  private loadResponseCounts(): void {
+    // Analytics endpointinden totalResponses'u al
+    const responseRequests = this.surveys.map(survey =>
+      this.apiService.getSurveyAnalytics({ surveyId: survey.surveyId! }).pipe(
+        switchMap((result: any) => {
+          console.log('survey-analytics result for', survey.surveyId, result);
+          const count = result?.summary?.totalResponses;
+          if (typeof count === 'number') {
+            return of({ surveyId: survey.surveyId, count });
+          }
+          // Fallback 1: statistics endpoint
+          return this.surveyService.getSurveyStatistics(survey.surveyId!).pipe(
+            map(stats => ({ surveyId: survey.surveyId, count: stats.totalResponses || 0 })),
+            catchError(() => of({ surveyId: survey.surveyId, count: 0 }))
+          );
+        }),
+        catchError(error => {
+          console.error(`Anket ${survey.surveyId} için analytics alınamadı:`, error);
+          // Fallback 2: direkt responses sayısı
+          return this.surveyService.getSurveyResponses(survey.surveyId!).pipe(
+            map(responses => ({ surveyId: survey.surveyId, count: responses.length })),
+            catchError(() => of({ surveyId: survey.surveyId, count: 0 }))
+          );
+        })
+      )
+    );
+
+    if (responseRequests.length > 0) {
+      forkJoin(responseRequests).subscribe(responseCounts => {
+        this.surveys = this.surveys.map(survey => {
+          const responseCount = responseCounts.find(c => c.surveyId === survey.surveyId)?.count || 0;
+          return { ...survey, responseCount };
         });
         this.isLoading = false;
       });
@@ -116,6 +159,11 @@ export class SurveyListComponent implements OnInit {
 
   navigateToResults(surveyId: number): void {
     this.router.navigate(['/dashboard/surveys/results', surveyId]);
+  }
+
+  navigateToTake(surveyId: number): void {
+    this.activeDropdown = null;
+    this.router.navigate(['/dashboard/surveys/take', surveyId]);
   }
 
   toggleDropdown(surveyId: number): void {

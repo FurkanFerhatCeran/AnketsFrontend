@@ -4,9 +4,12 @@ import { Component, OnInit } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { Router, RouterModule } from '@angular/router';
+import { forkJoin, of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
+import { ApiService } from '../../services/api.service';
 import { AuthService } from '../../services/auth.service';
-import { SurveyService } from '../../services/survey.service';
 import { SurveyTemplate, SurveyTemplateService } from '../../services/survey-template.service';
+import { SurveyService } from '../../services/survey.service';
 
 @Component({
   selector: 'app-home',
@@ -27,6 +30,7 @@ export class HomeComponent implements OnInit {
     private router: Router,
     private authService: AuthService,
     private surveyService: SurveyService,
+    private apiService: ApiService,
     private templateService: SurveyTemplateService
   ) { }
 
@@ -59,8 +63,21 @@ private loadSurveyStats(): void {
         this.activeSurveyCount = count;
     });
 
-    this.surveyService.getTotalResponses().subscribe((responses: number) => {
-        this.totalResponses = responses;
+    // Toplam yanıt sayısını analytics üzerinden topla
+    this.surveyService.getSurveys().subscribe(surveys => {
+        if (!surveys || surveys.length === 0) {
+            this.totalResponses = 0;
+            return;
+        }
+        const analyticsCalls = surveys.map(s =>
+            this.apiService.getSurveyAnalytics({ surveyId: s.surveyId }).pipe(
+                map((res: any) => res?.summary?.totalResponses ?? 0),
+                catchError(() => of(0))
+            )
+        );
+        forkJoin(analyticsCalls).subscribe(counts => {
+            this.totalResponses = counts.reduce((sum, c) => sum + (Number(c) || 0), 0);
+        });
     });
 
     this.surveyService.getResponseRate().subscribe((rate: number) => {
