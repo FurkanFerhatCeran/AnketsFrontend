@@ -3,19 +3,29 @@ import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
 
 export interface UserProfile {
-  id?: string;
-  firstName: string;
-  lastName: string;
+  id?: number;
+  username?: string;
   email: string;
+  nameSurname: string;
   phone?: string;
   bio?: string;
   role?: string;
   avatar?: string;
-  createdAt?: Date;
-  updatedAt?: Date;
+  createdAt?: string;
+  updatedAt?: string;
+  
+  // Frontend için backward compatibility
+  firstName?: string;
+  lastName?: string;
 }
 
-export interface PasswordData {
+export interface UpdateProfileRequest {
+  nameSurname: string;
+  phone?: string;
+  bio?: string;
+}
+
+export interface ChangePasswordRequest {
   currentPassword: string;
   newPassword: string;
   confirmPassword: string;
@@ -27,14 +37,19 @@ export interface UserStatistics {
   totalResponses: number;
   daysActive: number;
   completionRate: number;
-  averageRating?: number;
 }
 
-export interface UpdateProfileRequest {
-  firstName: string;
-  lastName: string;
+export interface ProfileResponse {
+  id: number;
+  username: string;
+  email: string;
+  nameSurname: string;
   phone?: string;
   bio?: string;
+  role: string;
+  avatar?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 @Injectable({
@@ -45,26 +60,26 @@ export class UserService {
   constructor(private apiService: ApiService) { }
 
   // Kullanıcı profil bilgilerini getir
-  getUserProfile(): Observable<UserProfile> {
-    return this.apiService.get<UserProfile>('/api/Users/profile');
+  getUserProfile(): Observable<ProfileResponse> {
+    return this.apiService.get<ProfileResponse>('/api/Users/profile');
   }
 
   // Profil güncelle
-  updateProfile(profile: UpdateProfileRequest): Observable<UserProfile> {
-    return this.apiService.put<UserProfile>('/api/Users/profile', profile);
+  updateProfile(profile: UpdateProfileRequest): Observable<ProfileResponse> {
+    return this.apiService.put<ProfileResponse>('/api/Users/profile', profile);
   }
 
   // Şifre değiştir
-  changePassword(passwordData: PasswordData): Observable<any> {
+  changePassword(passwordData: ChangePasswordRequest): Observable<any> {
     return this.apiService.post<any>('/api/Users/change-password', passwordData);
   }
 
   // Avatar yükle
-  uploadAvatar(file: File): Observable<{ avatarUrl: string }> {
+  uploadAvatar(file: File): Observable<{ avatarUrl: string; message: string }> {
     const formData = new FormData();
     formData.append('avatar', file);
     
-    // FormData için özel HTTP options
+    // FormData için özel HTTP request
     const token = localStorage.getItem('accessToken');
     const headers = new Headers();
     if (token) {
@@ -77,7 +92,12 @@ export class UserService {
         headers: headers,
         body: formData
       })
-      .then(response => response.json())
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
       .then(data => {
         observer.next(data);
         observer.complete();
@@ -92,49 +112,7 @@ export class UserService {
   getUserStatistics(): Observable<UserStatistics> {
     return this.apiService.get<UserStatistics>('/api/Users/statistics');
   }
-
-  // Kullanıcının anketlerini getir
-  getUserSurveys(): Observable<any[]> {
-    return this.apiService.get<any[]>('/api/Users/surveys');
-  }
-
-  // Kullanıcının anket yanıtlarını getir
-  getUserResponses(): Observable<any[]> {
-    return this.apiService.get<any[]>('/api/Users/responses');
-  }
-
-  // Kullanıcı aktivite geçmişi
-  getUserActivityHistory(): Observable<any[]> {
-    return this.apiService.get<any[]>('/api/Users/activity-history');
-  }
-
-  // Hesap silme
-  deleteAccount(): Observable<any> {
-    return this.apiService.delete<any>('/api/Users/account');
-  }
-
-  // Kullanıcı ayarları
-  getUserSettings(): Observable<any> {
-    return this.apiService.get<any>('/api/Users/settings');
-  }
-
-  // Kullanıcı ayarlarını güncelle
-  updateUserSettings(settings: any): Observable<any> {
-    return this.apiService.put<any>('/api/Users/settings', settings);
-  }
-
-  // Kullanıcı bildirimleri
-  getUserNotifications(): Observable<any[]> {
-    return this.apiService.get<any[]>('/api/Users/notifications');
-  }
-
-  // Bildirim okundu olarak işaretle
-  markNotificationAsRead(notificationId: string): Observable<any> {
-    return this.apiService.put<any>(`/api/Users/notifications/${notificationId}/read`, {});
-  }
-
-  // Tüm bildirimleri okundu olarak işaretle
-  markAllNotificationsAsRead(): Observable<any> {
-    return this.apiService.put<any>('/api/Users/notifications/read-all', {});
-  }
 }
+
+// Backward compatibility için
+export type PasswordData = ChangePasswordRequest;

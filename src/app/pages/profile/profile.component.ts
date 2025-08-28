@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { PasswordData, UpdateProfileRequest, UserProfile, UserService, UserStatistics } from '../../services/user.service';
+import { ProfileResponse } from '../../services/user.service';
 
 @Component({
   selector: 'app-profile',
@@ -15,9 +16,12 @@ import { PasswordData, UpdateProfileRequest, UserProfile, UserService, UserStati
 export class ProfileComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
+  // Backend'den gelen profil verisi
+  profileData: ProfileResponse | null = null;
+
+  // Form için kullanılan profil objesi
   userProfile: UserProfile = {
-    firstName: '',
-    lastName: '',
+    nameSurname: '', // Eksik olan alan eklendi
     email: '',
     phone: '',
     bio: '',
@@ -62,18 +66,49 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
   // Kullanıcı profilini yükle
   loadUserProfile(): void {
+    console.log('Backend\'den profil bilgileri yükleniyor...');
     this.isLoading = true;
     
     this.userService.getUserProfile()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (profile: UserProfile) => {
-          this.userProfile = profile;
+        next: (profile: ProfileResponse) => {
+          console.log('Backend\'den gelen profil verisi:', profile);
+          
+          this.userProfile = {
+            id: profile.id,
+            username: profile.username,
+            email: profile.email,
+            nameSurname: profile.nameSurname,
+            phone: profile.phone || '',
+            bio: profile.bio || '',
+            role: this.translateRole(profile.role),
+            avatar: profile.avatar || '',
+            
+            // Backward compatibility için firstName/lastName çıkar
+            firstName: this.extractFirstName(profile.nameSurname),
+            lastName: this.extractLastName(profile.nameSurname),
+            
+            // String olarak bırak (Date'e çevirme)
+            createdAt: profile.createdAt,
+            updatedAt: profile.updatedAt
+          };
+
+          console.log('Component\'e set edilen profil:', this.userProfile);
           this.isLoading = false;
         },
         error: (error: any) => {
           console.error('Profil yüklenirken hata:', error);
-          this.showError('Profil bilgileri yüklenemedi. Lütfen tekrar deneyin.');
+          
+          if (error.status === 401) {
+            this.showError('Oturum açık değil. Lütfen tekrar giriş yapın.');
+            localStorage.removeItem('accessToken');
+          } else if (error.status === 404) {
+            this.showError('Profil bilgileri bulunamadı.');
+          } else {
+            this.showError('Profil bilgileri yüklenemedi. Lütfen tekrar deneyin.');
+          }
+          
           this.isLoading = false;
         }
       });
@@ -129,31 +164,55 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
   // Profil güncelle
   updateProfile(): void {
-    if (!this.userProfile.firstName || !this.userProfile.lastName) {
-      this.showError('Ad ve soyad alanları zorunludur.');
+    if (!this.userProfile.nameSurname?.trim()) {
+      this.showError('Ad soyad alanı zorunludur.');
       return;
     }
 
+    console.log('Profil güncelleniyor:', this.userProfile);
     this.isLoading = true;
     
     const updateData: UpdateProfileRequest = {
-      firstName: this.userProfile.firstName,
-      lastName: this.userProfile.lastName,
-      phone: this.userProfile.phone,
-      bio: this.userProfile.bio
+      nameSurname: this.userProfile.nameSurname.trim(),
+      phone: this.userProfile.phone?.trim() || '',
+      bio: this.userProfile.bio?.trim() || ''
     };
+
+    console.log('Backend\'e gönderilen güncelleme verisi:', updateData);
 
     this.userService.updateProfile(updateData)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (response: UserProfile) => {
-          this.userProfile = { ...this.userProfile, ...response };
+        next: (response: ProfileResponse) => {
+          console.log('Profil güncelleme yanıtı:', response);
+          
+          this.userProfile = {
+            ...this.userProfile,
+            nameSurname: response.nameSurname,
+            phone: response.phone || '',
+            bio: response.bio || '',
+            // String olarak bırak (Date'e çevirme)
+            updatedAt: response.updatedAt
+          };
+          
           this.showSuccess('Profil başarıyla güncellendi!');
           this.isLoading = false;
         },
         error: (error: any) => {
           console.error('Profil güncellenirken hata:', error);
-          this.showError('Profil güncellenirken bir hata oluştu. Lütfen tekrar deneyin.');
+          
+          if (error.status === 400 && error.error?.errors) {
+            // Validation errors
+            const errors = error.error.errors;
+            let errorMessage = 'Doğrulama hataları:\n';
+            Object.keys(errors).forEach(key => {
+              errorMessage += `${key}: ${errors[key].join(', ')}\n`;
+            });
+            this.showError(errorMessage);
+          } else {
+            this.showError('Profil güncellenirken bir hata oluştu. Lütfen tekrar deneyin.');
+          }
+          
           this.isLoading = false;
         }
       });
@@ -286,5 +345,31 @@ export class ProfileComponent implements OnInit, OnDestroy {
     setTimeout(() => {
       this.showErrorMessage = false;
     }, 5000);
+  }
+
+  // Role'u Türkçeye çevir
+  private translateRole(role: string): string {
+    switch (role) {
+      case 'ADMIN':
+        return 'Yönetici';
+      case 'SURVEY_MANAGER':
+        return 'Anket Yöneticisi';
+      case 'USER':
+        return 'Kullanıcı';
+      default:
+        return role;
+    }
+  }
+
+  // Adı soyadından adı çıkar
+  private extractFirstName(nameSurname: string): string {
+    const parts = nameSurname.split(' ');
+    return parts[0] || '';
+  }
+
+  // Adı soyadından soyadı çıkar
+  private extractLastName(nameSurname: string): string {
+    const parts = nameSurname.split(' ');
+    return parts.length > 1 ? parts.slice(1).join(' ') : '';
   }
 }

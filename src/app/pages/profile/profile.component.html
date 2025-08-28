@@ -37,14 +37,16 @@
       <div class="card-header">
         <div class="avatar-section">
           <div class="user-avatar">
-            {{ getUserInitials() }}
+            <img *ngIf="userProfile.avatar" [src]="userProfile.avatar" [alt]="getUserDisplayName()">
+            <span *ngIf="!userProfile.avatar">{{ getUserInitials() }}</span>
           </div>
           <div class="avatar-info">
             <h3>{{ getUserDisplayName() }}</h3>
             <span class="user-role">{{ getUserRole() }}</span>
+            <span class="user-email" *ngIf="userProfile.email">{{ userProfile.email }}</span>
           </div>
         </div>
-        <button class="btn-edit-avatar" (click)="changeAvatar()">
+        <button class="btn-edit-avatar" (click)="changeAvatar()" [disabled]="isLoading">
           <span class="icon">📷</span>
           Fotoğraf Değiştir
         </button>
@@ -52,27 +54,17 @@
 
       <div class="card-content">
         <form (ngSubmit)="updateProfile()" #profileForm="ngForm">
-          <div class="form-row">
-            <div class="form-group">
-              <label for="firstName">Ad</label>
-              <input 
-                id="firstName" 
-                type="text" 
-                [(ngModel)]="userProfile.firstName" 
-                name="firstName" 
-                required 
-                class="form-control">
-            </div>
-            <div class="form-group">
-              <label for="lastName">Soyad</label>
-              <input 
-                id="lastName" 
-                type="text" 
-                [(ngModel)]="userProfile.lastName" 
-                name="lastName" 
-                required 
-                class="form-control">
-            </div>
+          <div class="form-group">
+            <label for="nameSurname">Ad Soyad *</label>
+            <input 
+              id="nameSurname" 
+              type="text" 
+              [(ngModel)]="userProfile.nameSurname" 
+              name="nameSurname" 
+              required 
+              maxlength="50"
+              class="form-control"
+              placeholder="Adınız ve soyadınız">
           </div>
 
           <div class="form-group">
@@ -82,7 +74,6 @@
               type="email" 
               [(ngModel)]="userProfile.email" 
               name="email" 
-              required 
               class="form-control"
               readonly>
             <small class="form-help">E-posta adresi değiştirilemez</small>
@@ -95,7 +86,9 @@
               type="tel" 
               [(ngModel)]="userProfile.phone" 
               name="phone" 
-              class="form-control">
+              maxlength="15"
+              class="form-control"
+              placeholder="+90 555 123 4567">
           </div>
 
           <div class="form-group">
@@ -106,6 +99,7 @@
               name="bio" 
               class="form-control" 
               rows="4"
+              maxlength="500"
               placeholder="Kendiniz hakkında kısa bir açıklama yazın..."></textarea>
           </div>
 
@@ -133,7 +127,7 @@
       <div class="card-content">
         <form (ngSubmit)="changePassword()" #passwordForm="ngForm">
           <div class="form-group">
-            <label for="currentPassword">Mevcut Şifre</label>
+            <label for="currentPassword">Mevcut Şifre *</label>
             <input 
               id="currentPassword" 
               type="password" 
@@ -145,17 +139,18 @@
 
           <div class="form-row">
             <div class="form-group">
-              <label for="newPassword">Yeni Şifre</label>
+              <label for="newPassword">Yeni Şifre *</label>
               <input 
                 id="newPassword" 
                 type="password" 
                 [(ngModel)]="passwordData.newPassword" 
                 name="newPassword" 
                 required 
+                minlength="6"
                 class="form-control">
             </div>
             <div class="form-group">
-              <label for="confirmPassword">Şifre Tekrar</label>
+              <label for="confirmPassword">Şifre Tekrar *</label>
               <input 
                 id="confirmPassword" 
                 type="password" 
@@ -176,8 +171,8 @@
       </div>
     </div>
 
-    <!-- Account Stats Card -->
-    <div class="profile-card">
+    <!-- Statistics Card (Opsiyonel) -->
+    <div class="profile-card" *ngIf="userStats">
       <div class="card-header">
         <h3>📊 Hesap İstatistikleri</h3>
         <p>Anket aktivitelerinizin özeti</p>
