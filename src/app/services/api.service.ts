@@ -375,7 +375,7 @@ submitSurveyResponse(payload: any): Observable<any> {
 
   getCorrelationAnalysis(request: any): Observable<any> {
     return this.post(API_ENDPOINTS.ANALYTICS.GET_CORRELATION_ANALYSIS, request);
-  }
+  } 
 
   // YENİ EKLENDİ: Yapay Zeka ile Anket Analizi
   generateAIAnalysis(surveyId: number): Observable<AIAnalysisResponse> {

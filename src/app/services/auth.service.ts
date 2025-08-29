@@ -3,15 +3,15 @@ import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 import {
-    ForgotPasswordResponse,
-    LoginRequest,
-    LoginResponse,
-    LogoutRequest,
-    LogoutResponse,
-    RegisterRequest,
-    RegisterResponse,
-    ResetPasswordResponse,
-    User
+  ForgotPasswordResponse,
+  LoginRequest,
+  LoginResponse,
+  LogoutRequest,
+  LogoutResponse,
+  RegisterRequest,
+  RegisterResponse,
+  ResetPasswordResponse,
+  User
 } from '../models/auth/auth.models';
 import { ApiService } from './api.service';
 
@@ -63,12 +63,6 @@ export class AuthService {
           return throwError(() => error);
         })
       );
-  }
-
-  public isAdmin(): boolean {
-    const user = this.getCurrentUser();
-    const roleName = user?.roleName?.toLowerCase();
-    return roleName === 'admin' || user?.roleId === 1;
   }
 
   // 🔥 Kayıt işlemi
@@ -167,6 +161,15 @@ export class AuthService {
     const token = this.getAccessToken();
     const user = this.getCurrentUser();
     return !!(token && user);
+  }
+
+  // Admin kullanıcı mı kontrol et
+  isAdmin(): boolean {
+    const user = this.getCurrentUser();
+    if (!user) return false;
+    
+    // Admin kontrolü: roleName 'Admin' veya roleId 1 olanlar admin
+    return user.roleName?.toLowerCase() === 'admin' || user.roleId === 1;
   }
 
   // Token'ın geçerli olup olmadığını kontrol et (JWT parse)

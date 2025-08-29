@@ -68,12 +68,16 @@ export class LoginComponent {
     // Success animation
     this.showSuccessAnimation();
     
-    // Role-based yönlendirme
+    // Admin kontrolü yaparak yönlendirme
     setTimeout(() => {
-      const role = response.user?.roleName?.toLowerCase();
-      if (role === 'admin') {
-        this.router.navigate(['/admin']);
+      const user = response.user;
+      if (user && (user.roleName?.toLowerCase() === 'admin' || user.roleId === 1)) {
+        // Admin ise admin dashboard'a yönlendir
+        console.log('👑 Admin kullanıcı tespit edildi, admin paneline yönlendiriliyor...');
+        this.router.navigate(['/admin/dashboard']);
       } else {
+        // Normal kullanıcı ise user dashboard'a yönlendir
+        console.log('👤 Normal kullanıcı, dashboard\'a yönlendiriliyor...');
         this.router.navigate(['/dashboard']);
       }
     }, 800);

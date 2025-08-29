@@ -1,0 +1,102 @@
+<div class="admin-logs">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <button class="back-btn" (click)="goBack()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="m12 19-7-7 7-7"/>
+          <path d="M19 12H5"/>
+        </svg>
+        <span>Geri</span>
+      </button>
+      <div class="page-title">
+        <h1>Sistem Logları</h1>
+        <p>Sistemdeki tüm aktiviteleri görüntüleyin</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-section">
+    <div class="filters-content">
+      <div class="filter-group">
+        <label>Durum Filtresi:</label>
+        <select (change)="onFilterChange($event)" [value]="filterType">
+          <option value="all">Tümü</option>
+          <option value="success">Başarılı</option>
+          <option value="error">Hatalı</option>
+          <option value="warning">Uyarı</option>
+        </select>
+      </div>
+      
+      <div class="search-group">
+        <input 
+          type="text" 
+          placeholder="Kullanıcı, IP veya işlem ara..." 
+          (input)="onSearchChange($event)"
+          [value]="searchTerm">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/>
+          <path d="m21 21-4.35-4.35"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- Logs Table -->
+  <div class="logs-section">
+    <div class="logs-table">
+      <div class="table-header">
+        <div class="th timestamp">Zaman</div>
+        <div class="th action">İşlem</div>
+        <div class="th user">Kullanıcı</div>
+        <div class="th ip">IP Adresi</div>
+        <div class="th status">Durum</div>
+        <div class="th details">Detaylar</div>
+      </div>
+      
+      <div class="table-body">
+        <div *ngFor="let log of getPaginatedLogs()" class="table-row">
+          <div class="td timestamp">{{ formatDateTime(log.timestamp) }}</div>
+          <div class="td action">{{ log.action }}</div>
+          <div class="td user">{{ log.user }}</div>
+          <div class="td ip">{{ log.ip }}</div>
+          <div class="td status">
+            <span class="status-badge" [class]="getStatusClass(log.status)">
+              {{ log.status === 'success' ? 'Başarılı' : log.status === 'error' ? 'Hatalı' : 'Uyarı' }}
+            </span>
+          </div>
+          <div class="td details">{{ log.details }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination" *ngIf="getTotalPages() > 1">
+      <button 
+        class="page-btn" 
+        [disabled]="currentPage === 1"
+        (click)="goToPage(currentPage - 1)">
+        Önceki
+      </button>
+      
+      <div class="page-numbers">
+        <button 
+          *ngFor="let page of getPageNumbers()"
+          class="page-number"
+          [class.active]="currentPage === page"
+          (click)="goToPage(page)">
+          {{ page }}
+        </button>
+      </div>
+      
+      <button 
+        class="page-btn"
+        [disabled]="currentPage === getTotalPages()"
+        (click)="goToPage(currentPage + 1)">
+        Sonraki
+      </button>
+    </div>
+  </div>
+</div>
+

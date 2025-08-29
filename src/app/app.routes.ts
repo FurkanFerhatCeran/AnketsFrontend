@@ -1,14 +1,11 @@
 // src/app/app.routes.ts
 
 import { Routes } from '@angular/router';
+import { AdminGuard } from './guards/admin.guard';
 import { AuthGuard } from './guards/auth.guard';
 import { LoginComponent } from './pages/auth/login/login.component';
 import { RegisterComponent } from './pages/auth/register/register.component';
 // Şifremi unuttum sayfasını içe aktarıyoruz
-import { AdminGuard } from './guards/admin.guard';
-import { AdminLogsComponent } from './pages/admin/admin-logs.component';
-import { AdminSurveysComponent } from './pages/admin/admin-surveys.component';
-import { AdminComponent } from './pages/admin/admin.component';
 import { ForgotPasswordComponent } from './pages/auth/forgot-password/forgot-password.component';
 import { DashboardComponent } from './pages/dashboard/dashboard.component';
 import { NotFoundComponent } from './pages/NotFound/not-found.component';
@@ -22,11 +19,15 @@ import { AboutComponent } from './pages/about/about.component';
 import { SurveyCreateComponent } from './pages/surveys/survey-create/survey-create.component';
 import { SurveyEditComponent } from './pages/surveys/survey-edit/survey-edit.component';
 import { SurveyListComponent } from './pages/surveys/survey-list/survey-list.component';
-import { SurveyResponsesComponent } from './pages/surveys/survey-responses/survey-responses.component';
 import { SurveyTakeComponent } from './pages/surveys/survey-take/survey-take.component';
 
-
 import { AiAnalysisComponent } from './pages/ai-analysis/ai-analysis.component'; // <-- AI Analysis Component'i import edin
+
+// Admin components
+import { AdminDashboardComponent } from './pages/admin/admin-dashboard/admin-dashboard.component';
+import { AdminLogsComponent } from './pages/admin/admin-logs/admin-logs.component';
+import { AdminSurveysComponent } from './pages/admin/admin-surveys/admin-surveys.component';
+import { AdminUsersComponent } from './pages/admin/admin-users/admin-users.component';
 
 export const routes: Routes = [
   // Giriş yapmadan erişilebilen yollar
@@ -35,6 +36,19 @@ export const routes: Routes = [
   { path: 'register', component: RegisterComponent },
   // Eksik olan 'şifremi unuttum' rotası eklendi
   { path: 'forgot-password', component: ForgotPasswordComponent },
+  
+  // Admin rotaları (AdminGuard ile korunuyor)
+  {
+    path: 'admin',
+    canActivate: [AdminGuard],
+    children: [
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+      { path: 'dashboard', component: AdminDashboardComponent },
+      { path: 'logs', component: AdminLogsComponent },
+      { path: 'users', component: AdminUsersComponent },
+      { path: 'surveys', component: AdminSurveysComponent }
+    ]
+  },
   
   // Oturum açtıktan sonra erişilebilen yollar (AuthGuard ile korunuyor)
   {
@@ -51,7 +65,6 @@ export const routes: Routes = [
       { path: 'surveys/create', component: SurveyCreateComponent },
       { path: 'surveys/edit/:id', component: SurveyEditComponent },
       { path: 'surveys/take/:id', component: SurveyTakeComponent },
-      { path: 'surveys/responses/:id', component: SurveyResponsesComponent },
       
       // Hakkımızda sayfası eklendi
       { path: 'about', component: AboutComponent },
@@ -64,17 +77,6 @@ export const routes: Routes = [
 
          // Ayarlar rotası eklendi
       { path: 'settings', component: SettingsComponent }
-    ]
-  },
-  // Admin area (separate layout)
-  {
-    path: 'admin',
-    component: AdminComponent,
-    canActivate: [AuthGuard, AdminGuard],
-    children: [
-      { path: '', redirectTo: 'surveys', pathMatch: 'full' },
-      { path: 'surveys', component: AdminSurveysComponent },
-      { path: 'logs', component: AdminLogsComponent }
     ]
   },
   
