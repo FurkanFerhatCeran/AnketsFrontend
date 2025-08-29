@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { ApiService } from '../../../services/api.service';
 
 @Component({
   selector: 'app-admin-logs',
@@ -16,70 +17,31 @@ export class AdminLogsComponent implements OnInit {
   searchTerm = '';
   currentPage = 1;
   itemsPerPage = 20;
+  total = 0;
 
-  constructor(private router: Router) {}
+  constructor(private router: Router, private api: ApiService) {}
 
   ngOnInit(): void {
     this.loadLogs();
   }
 
   loadLogs(): void {
-    // TODO: Admin servisinden gerçek log verilerini çek
-    this.logs = [
-      {
-        id: 1,
-        timestamp: new Date(Date.now() - 5 * 60 * 1000),
-        action: 'Kullanıcı Girişi',
-        user: 'john.doe@email.com',
-        ip: '192.168.1.100',
-        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+    // Backend: GET /api/Admin/logs/paged?page=X&pageSize=Y
+    this.api.getAdminLogsPaged(this.currentPage, this.itemsPerPage).subscribe((res: any) => {
+      const items = res?.items || [];
+      this.total = res?.total || items.length;
+      // Map backend fields -> UI model
+      this.logs = items.map((l: any) => ({
+        id: l.logId ?? l.id,
+        timestamp: l.createdAt ? new Date(l.createdAt) : new Date(),
+        action: l.action,
+        user: l.userId ?? '-',
+        ip: l.ipAddress ?? '-',
         status: 'success',
-        details: 'Başarılı giriş yapıldı'
-      },
-      {
-        id: 2,
-        timestamp: new Date(Date.now() - 15 * 60 * 1000),
-        action: 'Anket Oluşturuldu',
-        user: 'jane.smith@email.com',
-        ip: '192.168.1.101',
-        userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X)',
-        status: 'success',
-        details: 'Müşteri Memnuniyet Anketi oluşturuldu'
-      },
-      {
-        id: 3,
-        timestamp: new Date(Date.now() - 25 * 60 * 1000),
-        action: 'Başarısız Giriş Denemesi',
-        user: 'unknown@email.com',
-        ip: '10.0.0.1',
-        userAgent: 'Mozilla/5.0 (X11; Linux x86_64)',
-        status: 'error',
-        details: 'Geçersiz şifre girişi'
-      },
-      {
-        id: 4,
-        timestamp: new Date(Date.now() - 35 * 60 * 1000),
-        action: 'Anket Yanıtlandı',
-        user: 'user123@email.com',
-        ip: '192.168.1.102',
-        userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS)',
-        status: 'success',
-        details: 'Anket ID: 15 yanıtlandı'
-      },
-      // Daha fazla örnek log
-      ...Array.from({ length: 50 }, (_, i) => ({
-        id: i + 5,
-        timestamp: new Date(Date.now() - (i + 1) * 60 * 60 * 1000),
-        action: ['Kullanıcı Girişi', 'Anket Oluşturuldu', 'Anket Yanıtlandı', 'Şifre Değiştirildi'][i % 4],
-        user: `user${i}@email.com`,
-        ip: `192.168.1.${100 + (i % 50)}`,
-        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-        status: i % 10 === 0 ? 'error' : 'success',
-        details: `İşlem detayı ${i + 5}`
-      }))
-    ];
-    
-    this.filteredLogs = [...this.logs];
+        details: ''
+      }));
+      this.filteredLogs = [...this.logs];
+    });
   }
 
   filterLogs(): void {
@@ -113,7 +75,7 @@ export class AdminLogsComponent implements OnInit {
   }
 
   getTotalPages(): number {
-    return Math.ceil(this.filteredLogs.length / this.itemsPerPage);
+    return Math.ceil((this.total || 0) / this.itemsPerPage);
   }
 
   goToPage(page: number): void {

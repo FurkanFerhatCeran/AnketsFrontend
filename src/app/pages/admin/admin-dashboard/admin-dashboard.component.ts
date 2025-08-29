@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
+import { ApiService } from '../../../services/api.service';
 import { AuthService } from '../../../services/auth.service';
 
 @Component({
@@ -24,6 +25,7 @@ export class AdminDashboardComponent implements OnInit {
 
   constructor(
     private authService: AuthService,
+    private api: ApiService,
     private router: Router
   ) {}
 
@@ -35,81 +37,38 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   loadAdminStats(): void {
-    // TODO: Admin servisinden gerçek verileri çek
-    this.stats = {
-      totalUsers: 156,
-      totalSurveys: 42,
-      totalResponses: 1284,
-      activeUsers: 23
-    };
+    this.api.getAdminSurveysPaged(1, 1).subscribe((res: any) => {
+      this.stats.totalSurveys = res?.total ?? 0;
+    });
+    // totalUsers, activeUsers, totalResponses için backend endpointi sağlandığında bağlanır
   }
 
   loadRecentLogs(): void {
-    // TODO: Log servisinden gerçek verileri çek
-    this.recentLogs = [
-      {
-        id: 1,
-        action: 'Kullanıcı Girişi',
-        user: 'john.doe@email.com',
-        timestamp: new Date(Date.now() - 5 * 60 * 1000),
-        ip: '192.168.1.100',
+    this.api.getAdminLogsPaged(1, 5).subscribe((res: any) => {
+      const items = res?.items || [];
+      this.recentLogs = items.map((l: any) => ({
+        id: l.logId ?? l.id,
+        action: l.action,
+        user: l.userId ? String(l.userId) : '-',
+        timestamp: l.createdAt ? new Date(l.createdAt) : new Date(),
+        ip: l.ipAddress || '-',
         status: 'success'
-      },
-      {
-        id: 2,
-        action: 'Anket Oluşturuldu',
-        user: 'jane.smith@email.com',
-        timestamp: new Date(Date.now() - 15 * 60 * 1000),
-        ip: '192.168.1.101',
-        status: 'success'
-      },
-      {
-        id: 3,
-        action: 'Başarısız Giriş Denemesi',
-        user: 'unknown@email.com',
-        timestamp: new Date(Date.now() - 25 * 60 * 1000),
-        ip: '10.0.0.1',
-        status: 'error'
-      },
-      {
-        id: 4,
-        action: 'Anket Yanıtlandı',
-        user: 'user123@email.com',
-        timestamp: new Date(Date.now() - 35 * 60 * 1000),
-        ip: '192.168.1.102',
-        status: 'success'
-      }
-    ];
+      }));
+    });
   }
 
   loadRecentSurveys(): void {
-    // TODO: Survey servisinden gerçek verileri çek
-    this.recentSurveys = [
-      {
-        id: 1,
-        title: 'Müşteri Memnuniyet Anketi',
-        creator: 'admin@company.com',
-        responses: 45,
-        createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-        status: 'active'
-      },
-      {
-        id: 2,
-        title: 'Çalışan Motivasyon Araştırması',
-        creator: 'hr@company.com',
-        responses: 23,
-        createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-        status: 'active'
-      },
-      {
-        id: 3,
-        title: 'Ürün Geri Bildirim Formu',
-        creator: 'product@company.com',
-        responses: 67,
-        createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-        status: 'completed'
-      }
-    ];
+    this.api.getAdminSurveysPaged(1, 3).subscribe((res: any) => {
+      const items = res?.items || [];
+      this.recentSurveys = items.map((s: any) => ({
+        id: s.surveyId ?? s.id,
+        title: s.title ?? s.surveyTitle ?? `#${s.surveyId}`,
+        creator: s.creatorId ? `user:${s.creatorId}` : '-',
+        responses: s.responseCount ?? 0,
+        createdAt: s.createdAt ? new Date(s.createdAt) : new Date(),
+        status: s.isActive ? 'active' : 'completed'
+      }));
+    });
   }
 
   logout(): void {

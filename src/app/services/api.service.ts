@@ -377,6 +377,24 @@ submitSurveyResponse(payload: any): Observable<any> {
     return this.post(API_ENDPOINTS.ANALYTICS.GET_CORRELATION_ANALYSIS, request);
   } 
 
+  // 🔐 ADMIN METHODS
+  getAdminLogs(take: number = 200): Observable<any> {
+    const endpoint = `/api/Admin/logs?take=${encodeURIComponent(String(take))}`;
+    return this.get(endpoint);
+  }
+
+  getAdminLogsPaged(page: number = 1, pageSize: number = 50): Observable<{ items: any[]; total: number; page: number; pageSize: number; }>
+  {
+    const endpoint = `/api/Admin/logs/paged?page=${encodeURIComponent(String(page))}&pageSize=${encodeURIComponent(String(pageSize))}`;
+    return this.get(endpoint);
+  }
+
+  getAdminSurveysPaged(page: number = 1, pageSize: number = 20): Observable<{ items: any[]; total: number; page: number; pageSize: number; }>
+  {
+    const endpoint = `/api/Admin/surveys?page=${encodeURIComponent(String(page))}&pageSize=${encodeURIComponent(String(pageSize))}`;
+    return this.get(endpoint);
+  }
+
   // YENİ EKLENDİ: Yapay Zeka ile Anket Analizi
   generateAIAnalysis(surveyId: number): Observable<AIAnalysisResponse> {
     return this.post<AIAnalysisResponse>(API_ENDPOINTS.ANALYTICS.GENERATE_AI_ANALYSIS(surveyId), {});

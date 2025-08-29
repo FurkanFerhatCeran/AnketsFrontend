@@ -10,7 +10,8 @@ html, body {
   margin: 0;
   // Material Design bileşenleri için Roboto önerilir, ancak genel metin için Inter kullanabiliriz
   font-family: 'Inter', Roboto, "Helvetica Neue", sans-serif;
-  overflow: hidden; /* Sayfanın tamamı arka plan olacaksa taşmayı engelle */
+  overflow-x: hidden; /* yatay taşmayı gizle */
+  overflow-y: auto;   /* dikey scroll'u etkinleştir */
 
   // TÜM SAYFAYA ARKA PLAN EKLEME
   background-image: url('/assets/backgrounds/on-boarding-bg.png'); /* Resminizin YOLUNU KONTROL EDİN */
@@ -29,6 +30,7 @@ html, body {
 .mat-drawer-container, /* Eğer mat-drawer kullanılıyorsa */
 .mat-drawer-content { /* Eğer mat-drawer kullanılıyorsa */
   background-color: transparent !important;
+  min-height: 100vh; /* içerik yüksekliği */
 }
 
 /* Ana uygulama kök elementi için de şeffaflık */
