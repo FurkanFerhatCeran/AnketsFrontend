@@ -1,8 +1,10 @@
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { ApiService } from '../../../services/api.service';
 import { AuthService } from '../../../services/auth.service';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -26,6 +28,7 @@ export class AdminDashboardComponent implements OnInit {
   constructor(
     private authService: AuthService,
     private api: ApiService,
+    private http: HttpClient,
     private router: Router
   ) {}
 
@@ -37,10 +40,49 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   loadAdminStats(): void {
-    this.api.getAdminSurveysPaged(1, 1).subscribe((res: any) => {
-      this.stats.totalSurveys = res?.total ?? 0;
+    // Toplam anket sayısı
+    this.api.getAdminSurveysPaged(1, 1).subscribe({
+      next: (res: any) => {
+        this.stats.totalSurveys = res?.total ?? 0;
+      },
+      error: (err) => {
+        console.error('Anket sayısı yüklenirken hata:', err);
+        this.stats.totalSurveys = 0;
+      }
     });
-    // totalUsers, activeUsers, totalResponses için backend endpointi sağlandığında bağlanır
+
+    // Toplam kullanıcı sayısı
+    this.http.get<{count: number}>(`${environment.apiUrl}/api/Admin/users/count`).subscribe({
+      next: (res) => {
+        this.stats.totalUsers = res?.count ?? 0;
+      },
+      error: (err) => {
+        console.error('Kullanıcı sayısı yüklenirken hata:', err);
+        this.stats.totalUsers = 0;
+      }
+    });
+
+    // Aktif kullanıcı sayısı
+    this.http.get<{count: number}>(`${environment.apiUrl}/api/Admin/users/active-count`).subscribe({
+      next: (res) => {
+        this.stats.activeUsers = res?.count ?? 0;
+      },
+      error: (err) => {
+        console.error('Aktif kullanıcı sayısı yüklenirken hata:', err);
+        this.stats.activeUsers = 0;
+      }
+    });
+
+    // Toplam yanıt sayısı
+    this.http.get<{count: number}>(`${environment.apiUrl}/api/Admin/responses/count`).subscribe({
+      next: (res) => {
+        this.stats.totalResponses = res?.count ?? 0;
+      },
+      error: (err) => {
+        console.error('Yanıt sayısı yüklenirken hata:', err);
+        this.stats.totalResponses = 0;
+      }
+    });
   }
 
   loadRecentLogs(): void {

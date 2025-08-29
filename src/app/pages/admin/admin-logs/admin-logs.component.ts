@@ -2,6 +2,8 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { ApiService } from '../../../services/api.service';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-admin-logs',
@@ -19,7 +21,11 @@ export class AdminLogsComponent implements OnInit {
   itemsPerPage = 20;
   total = 0;
 
-  constructor(private router: Router, private api: ApiService) {}
+  constructor(
+    private router: Router, 
+    private api: ApiService,
+    private http: HttpClient
+  ) {}
 
   ngOnInit(): void {
     this.loadLogs();

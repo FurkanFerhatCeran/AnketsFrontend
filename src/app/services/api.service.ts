@@ -399,4 +399,21 @@ submitSurveyResponse(payload: any): Observable<any> {
   generateAIAnalysis(surveyId: number): Observable<AIAnalysisResponse> {
     return this.post<AIAnalysisResponse>(API_ENDPOINTS.ANALYTICS.GENERATE_AI_ANALYSIS(surveyId), {});
   }
+
+  // Admin API Metotları
+  getAdminUsersCount(): Observable<{ count: number }> {
+    return this.get('/api/Admin/users/count');
+  }
+
+  getAdminActiveUsersCount(): Observable<{ count: number }> {
+    return this.get('/api/Admin/users/active-count');
+  }
+
+  getAdminResponsesCount(): Observable<{ count: number }> {
+    return this.get('/api/Admin/responses/count');
+  }
+
+  getAdminStats(): Observable<any> {
+    return this.get('/api/Admin/stats');
+  }
 }
