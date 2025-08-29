@@ -5,6 +5,10 @@ import { AuthGuard } from './guards/auth.guard';
 import { LoginComponent } from './pages/auth/login/login.component';
 import { RegisterComponent } from './pages/auth/register/register.component';
 // Şifremi unuttum sayfasını içe aktarıyoruz
+import { AdminGuard } from './guards/admin.guard';
+import { AdminLogsComponent } from './pages/admin/admin-logs.component';
+import { AdminSurveysComponent } from './pages/admin/admin-surveys.component';
+import { AdminComponent } from './pages/admin/admin.component';
 import { ForgotPasswordComponent } from './pages/auth/forgot-password/forgot-password.component';
 import { DashboardComponent } from './pages/dashboard/dashboard.component';
 import { NotFoundComponent } from './pages/NotFound/not-found.component';
@@ -18,6 +22,7 @@ import { AboutComponent } from './pages/about/about.component';
 import { SurveyCreateComponent } from './pages/surveys/survey-create/survey-create.component';
 import { SurveyEditComponent } from './pages/surveys/survey-edit/survey-edit.component';
 import { SurveyListComponent } from './pages/surveys/survey-list/survey-list.component';
+import { SurveyResponsesComponent } from './pages/surveys/survey-responses/survey-responses.component';
 import { SurveyTakeComponent } from './pages/surveys/survey-take/survey-take.component';
 
 
@@ -46,6 +51,7 @@ export const routes: Routes = [
       { path: 'surveys/create', component: SurveyCreateComponent },
       { path: 'surveys/edit/:id', component: SurveyEditComponent },
       { path: 'surveys/take/:id', component: SurveyTakeComponent },
+      { path: 'surveys/responses/:id', component: SurveyResponsesComponent },
       
       // Hakkımızda sayfası eklendi
       { path: 'about', component: AboutComponent },
@@ -58,6 +64,17 @@ export const routes: Routes = [
 
          // Ayarlar rotası eklendi
       { path: 'settings', component: SettingsComponent }
+    ]
+  },
+  // Admin area (separate layout)
+  {
+    path: 'admin',
+    component: AdminComponent,
+    canActivate: [AuthGuard, AdminGuard],
+    children: [
+      { path: '', redirectTo: 'surveys', pathMatch: 'full' },
+      { path: 'surveys', component: AdminSurveysComponent },
+      { path: 'logs', component: AdminLogsComponent }
     ]
   },
   

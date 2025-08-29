@@ -77,6 +77,10 @@ private loadSurveyStats(): void {
         );
         forkJoin(analyticsCalls).subscribe(counts => {
             this.totalResponses = counts.reduce((sum, c) => sum + (Number(c) || 0), 0);
+            const surveyCount = surveys.length || 0;
+            this.responseRate = surveyCount > 0
+              ? Math.round((this.totalResponses / surveyCount) * 100)
+              : 0;
         });
     });
 

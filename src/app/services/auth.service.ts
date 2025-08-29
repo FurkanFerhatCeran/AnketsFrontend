@@ -3,15 +3,15 @@ import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 import {
-  ForgotPasswordResponse,
-  LoginRequest,
-  LoginResponse,
-  LogoutRequest,
-  LogoutResponse,
-  RegisterRequest,
-  RegisterResponse,
-  ResetPasswordResponse,
-  User
+    ForgotPasswordResponse,
+    LoginRequest,
+    LoginResponse,
+    LogoutRequest,
+    LogoutResponse,
+    RegisterRequest,
+    RegisterResponse,
+    ResetPasswordResponse,
+    User
 } from '../models/auth/auth.models';
 import { ApiService } from './api.service';
 
@@ -63,6 +63,12 @@ export class AuthService {
           return throwError(() => error);
         })
       );
+  }
+
+  public isAdmin(): boolean {
+    const user = this.getCurrentUser();
+    const roleName = user?.roleName?.toLowerCase();
+    return roleName === 'admin' || user?.roleId === 1;
   }
 
   // 🔥 Kayıt işlemi

@@ -68,9 +68,14 @@ export class LoginComponent {
     // Success animation
     this.showSuccessAnimation();
     
-    // Dashboard'a yönlendirme
+    // Role-based yönlendirme
     setTimeout(() => {
-      this.router.navigate(['/dashboard']);
+      const role = response.user?.roleName?.toLowerCase();
+      if (role === 'admin') {
+        this.router.navigate(['/admin']);
+      } else {
+        this.router.navigate(['/dashboard']);
+      }
     }, 800);
   }
 
