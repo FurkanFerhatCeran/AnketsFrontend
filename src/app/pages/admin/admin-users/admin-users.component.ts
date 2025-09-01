@@ -1,6 +1,9 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { ApiService } from '../../../services/api.service';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-admin-users',
@@ -420,22 +423,122 @@ import { Router } from '@angular/router';
   `]
 })
 export class AdminUsersComponent implements OnInit {
-  totalUsers = 156;
-  activeUsers = 142;
-  adminUsers = 3;
+  totalUsers = 0;
+  activeUsers = 0;
+  adminUsers = 0;
   
   users: any[] = [];
   filteredUsers: any[] = [];
   searchTerm = '';
+  isLoading = false;
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router, 
+    private api: ApiService,
+    private http: HttpClient
+  ) {}
 
   ngOnInit(): void {
+    this.loadStats();
     this.loadUsers();
   }
 
+  // İstatistikleri yükle
+  loadStats(): void {
+    // Toplam kullanıcı sayısı
+    this.api.getAdminUsersCount().subscribe({
+      next: (res: any) => {
+        this.totalUsers = res?.count ?? 0;
+      },
+      error: (err) => {
+        console.error('Toplam kullanıcı sayısı yüklenirken hata:', err);
+        this.totalUsers = 0;
+      }
+    });
+
+    // Aktif kullanıcı sayısı
+    this.api.getAdminActiveUsersCount().subscribe({
+      next: (res: any) => {
+        this.activeUsers = res?.count ?? 0;
+      },
+      error: (err) => {
+        console.error('Aktif kullanıcı sayısı yüklenirken hata:', err);
+        this.activeUsers = 0;
+      }
+    });
+  }
+
+  // Kullanıcı listesini yükle
   loadUsers(): void {
-    // TODO: Gerçek API'den kullanıcı verilerini çek
+    this.isLoading = true;
+    console.log('🔄 Kullanıcılar yükleniyor...');
+
+    // Backend'den kullanıcıları çek
+    const endpoint = '/api/Admin/users';
+    this.http.get(`${environment.apiUrl}${endpoint}`).subscribe({
+      next: (res: any) => {
+        console.log('✅ Backend yanıtı:', res);
+        this.processUsersResponse(res);
+        this.isLoading = false;
+      },
+      error: (err) => {
+        console.error('❌ Backend hatası:', err);
+        this.isLoading = false;
+        // Hata durumunda mock verileri göster
+        this.loadMockUsers();
+      }
+    });
+  }
+
+  // Backend response'unu işle
+  private processUsersResponse(res: any): void {
+    // Backend'den gelen format: { items: [...], total: number, page: number, pageSize: number }
+    const items = res?.items || [];
+    const total = res?.total || 0;
+    
+    console.log(`📊 ${items.length} kullanıcı bulundu, toplam: ${total}`);
+    
+    if (Array.isArray(items) && items.length > 0) {
+      // Backend'den gelen veriyi doğrudan kullan
+      this.users = items.map((u: any) => ({
+        userId: u.userId,
+        nameSurname: u.nameSurname,
+        username: u.username,
+        email: u.email,
+        roleName: u.roleName,
+        isActive: u.isActive,
+        createdAt: u.createdAt
+      }));
+
+      this.filteredUsers = [...this.users];
+
+      // Admin kullanıcı sayısını hesapla
+      this.adminUsers = this.users.filter(u => 
+        (u.roleName || '').toLowerCase().includes('admin')
+      ).length;
+
+      // Backend'den gelen total değerini kullan
+      if (total > 0) {
+        this.totalUsers = total;
+      } else {
+        this.totalUsers = this.users.length;
+      }
+
+      // Aktif kullanıcı sayısını hesapla
+      this.activeUsers = this.users.filter(u => u.isActive).length;
+
+      console.log(`✅ ${this.users.length} kullanıcı yüklendi`);
+      console.log(`📈 Toplam: ${this.totalUsers}, Aktif: ${this.activeUsers}, Admin: ${this.adminUsers}`);
+    } else {
+      console.warn('⚠️ Backend\'den kullanıcı verisi gelmedi');
+      this.users = [];
+      this.filteredUsers = [];
+    }
+  }
+
+  // Mock kullanıcılar (sadece hata durumunda)
+  private loadMockUsers(): void {
+    console.log('⚠️ Mock kullanıcılar yükleniyor (backend hatası nedeniyle)');
     this.users = [
       {
         userId: 1,
@@ -444,55 +547,32 @@ export class AdminUsersComponent implements OnInit {
         email: 'admin@ankets.com',
         roleName: 'Admin',
         isActive: true,
-        createdAt: '2024-01-15T10:30:00Z'
-      },
-      {
-        userId: 2,
-        nameSurname: 'John Doe',
-        username: 'johndoe',
-        email: 'john.doe@email.com',
-        roleName: 'User',
-        isActive: true,
-        createdAt: '2024-02-01T14:20:00Z'
-      },
-      {
-        userId: 3,
-        nameSurname: 'Jane Smith',
-        username: 'janesmith',
-        email: 'jane.smith@email.com',
-        roleName: 'User',
-        isActive: true,
-        createdAt: '2024-02-10T09:15:00Z'
-      },
-      {
-        userId: 4,
-        nameSurname: 'Mike Johnson',
-        username: 'mikejohnson',
-        email: 'mike.johnson@email.com',
-        roleName: 'User',
-        isActive: false,
-        createdAt: '2024-01-28T16:45:00Z'
+        createdAt: new Date().toISOString()
       }
     ];
     
     this.filteredUsers = [...this.users];
+    this.totalUsers = 1;
+    this.activeUsers = 1;
+    this.adminUsers = 1;
   }
 
   onSearch(event: any): void {
     this.searchTerm = event.target.value;
     this.filteredUsers = this.users.filter(user => 
-      user.nameSurname.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-      user.username.toLowerCase().includes(this.searchTerm.toLowerCase())
+      (user.nameSurname || '').toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+      (user.email || '').toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+      (user.username || '').toLowerCase().includes(this.searchTerm.toLowerCase())
     );
   }
 
   getUserInitials(nameSurname: string): string {
-    return nameSurname.split(' ').map(n => n[0]).join('').toUpperCase();
+    if (!nameSurname) return 'U';
+    return nameSurname.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
   }
 
   getRoleClass(roleName: string): string {
-    return roleName.toLowerCase() === 'admin' ? 'admin' : 'user';
+    return (roleName || '').toLowerCase().includes('admin') ? 'admin' : 'user';
   }
 
   getStatusClass(isActive: boolean): string {

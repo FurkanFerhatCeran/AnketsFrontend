@@ -19,6 +19,16 @@
   <!-- Filters -->
   <div class="filters-section">
     <div class="filters-content">
+      <!-- Yeni eklenen: Log türü seçimi -->
+      <div class="filter-group">
+        <label>Log Türü:</label>
+        <select (change)="onLogTypeChange($event)" [value]="logType">
+          <option value="all">Tüm Loglar</option>
+          <option value="admin">Sadece Admin Logları</option>
+          <option value="user">Sadece Kullanıcı Logları</option>
+        </select>
+      </div>
+      
       <div class="filter-group">
         <label>Durum Filtresi:</label>
         <select (change)="onFilterChange($event)" [value]="filterType">

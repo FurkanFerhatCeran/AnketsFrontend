@@ -416,4 +416,25 @@ submitSurveyResponse(payload: any): Observable<any> {
   getAdminStats(): Observable<any> {
     return this.get('/api/Admin/stats');
   }
+
+  // YENİ EKLENDİ: Admin kullanıcı listesi
+  getAdminUsersPaged(page: number = 1, pageSize: number = 50): Observable<{ items: any[]; total: number; page: number; pageSize: number; }> {
+    const endpoint = `/api/Admin/users?page=${encodeURIComponent(String(page))}&pageSize=${encodeURIComponent(String(pageSize))}`;
+    return this.get(endpoint);
+  }
+
+  // YENİ EKLENDİ: Tüm kullanıcıları çek
+  getAllUsers(): Observable<any> {
+    return this.get('/api/Admin/users');
+  }
+
+  // YENİ EKLENDİ: Kullanıcı güncelle
+  updateUser(userId: number, userData: any): Observable<any> {
+    return this.put(`/api/Admin/users/${userId}`, userData);
+  }
+
+  // YENİ EKLENDİ: Kullanıcı sil
+  deleteUser(userId: number): Observable<any> {
+    return this.delete(`/api/Admin/users/${userId}`);
+  }
 }

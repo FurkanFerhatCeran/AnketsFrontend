@@ -18,8 +18,11 @@ export class AdminLogsComponent implements OnInit {
   filterType = 'all';
   searchTerm = '';
   currentPage = 1;
-  itemsPerPage = 20;
+  itemsPerPage = 25;
   total = 0;
+  
+  // Yeni eklenen: Log türü seçimi
+  logType = 'all'; // 'all', 'admin', 'user'
 
   constructor(
     private router: Router, 
@@ -31,32 +34,113 @@ export class AdminLogsComponent implements OnInit {
     this.loadLogs();
   }
 
+  // Log türü değiştiğinde çağrılır
+  onLogTypeChange(event: any): void {
+    this.logType = event.target.value;
+    this.currentPage = 1;
+    this.loadLogs();
+  }
+
   loadLogs(): void {
-    // Backend: GET /api/Admin/logs/paged?page=X&pageSize=Y
-    this.api.getAdminLogsPaged(this.currentPage, this.itemsPerPage).subscribe((res: any) => {
-      const items = res?.items || [];
-      this.total = res?.total || items.length;
-      // Map backend fields -> UI model
-      this.logs = items.map((l: any) => ({
-        id: l.logId ?? l.id,
-        timestamp: l.createdAt ? new Date(l.createdAt) : new Date(),
-        action: l.action,
-        user: l.userId ?? '-',
-        ip: l.ipAddress ?? '-',
-        status: 'success',
-        details: ''
-      }));
-      this.filteredLogs = [...this.logs];
+    if (this.logType === 'admin') {
+      // Sadece admin logları
+      this.loadAdminLogs();
+    } else if (this.logType === 'user') {
+      // Sadece kullanıcı logları
+      this.loadUserLogs();
+    } else {
+      // Tüm loglar (hem admin hem kullanıcı)
+      this.loadAllLogs();
+    }
+  }
+
+  // Admin logları yükle
+  loadAdminLogs(): void {
+    this.api.getAdminLogsPaged(this.currentPage, this.itemsPerPage).subscribe({
+      next: (res: any) => {
+        this.processLogsResponse(res);
+      },
+      error: (err) => {
+        console.error('Admin logları yüklenirken hata:', err);
+        this.handleError();
+      }
     });
+  }
+
+  // Kullanıcı logları yükle (yeni endpoint)
+  loadUserLogs(): void {
+    // Backend'de /api/Logs/user endpoint'i varsa kullan
+    const endpoint = `/api/Logs/user?page=${this.currentPage}&pageSize=${this.itemsPerPage}`;
+    this.http.get(`${environment.apiUrl}${endpoint}`).subscribe({
+      next: (res: any) => {
+        this.processLogsResponse(res);
+      },
+      error: (err) => {
+        console.error('Kullanıcı logları yüklenirken hata:', err);
+        // Fallback: genel log endpoint'ini dene
+        this.loadAllLogs();
+      }
+    });
+  }
+
+  // Tüm logları yükle (yeni endpoint)
+  loadAllLogs(): void {
+    // Backend'de /api/Logs endpoint'i varsa kullan
+    const endpoint = `/api/Logs?page=${this.currentPage}&pageSize=${this.itemsPerPage}`;
+    this.http.get(`${environment.apiUrl}${endpoint}`).subscribe({
+      next: (res: any) => {
+        this.processLogsResponse(res);
+      },
+      error: (err) => {
+        console.error('Tüm loglar yüklenirken hata:', err);
+        // Fallback: admin loglarına geri dön
+        console.log('Fallback: Admin logları yükleniyor...');
+        this.loadAdminLogs();
+      }
+    });
+  }
+
+  // Log response'ını işle
+  private processLogsResponse(res: any): void {
+    const items = res?.items || res?.data || [];
+    this.total = res?.total || res?.count || items.length;
+    
+    this.logs = items.map((l: any) => ({
+      id: l.logId ?? l.id ?? Math.random(),
+      timestamp: l.createdAt ? new Date(l.createdAt) : new Date(),
+      action: l.action ?? l.message ?? 'Bilinmeyen işlem',
+      user: l.userId ?? l.userName ?? l.email ?? '-',
+      ip: l.ipAddress ?? l.ip ?? '-',
+      status: this.determineStatus(l),
+      details: l.details ?? l.description ?? '',
+      logType: l.logType ?? 'system'
+    }));
+    
+    this.filteredLogs = [...this.logs];
+  }
+
+  // Log durumunu belirle
+  private determineStatus(log: any): string {
+    if (log.status) return log.status;
+    if (log.level === 'ERROR' || log.level === 'error') return 'error';
+    if (log.level === 'WARN' || log.level === 'warn') return 'warning';
+    return 'success';
+  }
+
+  // Hata durumunda
+  private handleError(): void {
+    this.logs = [];
+    this.filteredLogs = [];
+    this.total = 0;
   }
 
   filterLogs(): void {
     this.filteredLogs = this.logs.filter(log => {
       const matchesType = this.filterType === 'all' || log.status === this.filterType;
       const matchesSearch = !this.searchTerm || 
-        log.action.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-        log.user.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-        log.ip.includes(this.searchTerm);
+        (log.action || '').toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+        (log.user || '').toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+        (log.ip || '').includes(this.searchTerm);
       
       return matchesType && matchesSearch;
     });
@@ -94,7 +178,6 @@ export class AdminLogsComponent implements OnInit {
     const totalPages = this.getTotalPages();
     const pages: number[] = [];
     
-    // Basit sayfalama: maksimum 5 sayfa göster
     const startPage = Math.max(1, this.currentPage - 2);
     const endPage = Math.min(totalPages, startPage + 4);
     

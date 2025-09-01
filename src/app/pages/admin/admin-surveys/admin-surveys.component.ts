@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { ApiService } from '../../../services/api.service';
 
 @Component({
   selector: 'app-admin-surveys',
@@ -447,63 +448,81 @@ import { Router } from '@angular/router';
   `]
 })
 export class AdminSurveysComponent implements OnInit {
-  totalSurveys = 42;
-  activeSurveys = 28;
-  totalResponses = 1284;
+  totalSurveys = 0;
+  activeSurveys = 0;
+  totalResponses = 0;
   
   surveys: any[] = [];
   filteredSurveys: any[] = [];
   searchTerm = '';
   filterStatus = 'all';
 
-  constructor(private router: Router) {}
+  constructor(private router: Router, private api: ApiService) {}
 
   ngOnInit(): void {
+    this.loadStats();
     this.loadSurveys();
   }
 
-  loadSurveys(): void {
-    // TODO: Gerçek API'den anket verilerini çek
-    this.surveys = [
-      {
-        id: 1,
-        title: 'Müşteri Memnuniyet Anketi',
-        description: 'Müşterilerimizin memnuniyet düzeyini ölçen kapsamlı anket',
-        creator: 'admin@company.com',
-        status: 'active',
-        responses: 45,
-        createdAt: '2024-01-15T10:30:00Z'
+  // Genel istatistikleri yükle
+  loadStats(): void {
+    // Toplam anket sayısı
+    this.api.getAdminSurveysPaged(1, 1).subscribe({
+      next: (res: any) => {
+        this.totalSurveys = res?.total ?? 0;
       },
-      {
-        id: 2,
-        title: 'Çalışan Motivasyon Araştırması',
-        description: 'Şirket içi motivasyon ve iş memnuniyeti anketi',
-        creator: 'hr@company.com',
-        status: 'active',
-        responses: 23,
-        createdAt: '2024-02-01T14:20:00Z'
-      },
-      {
-        id: 3,
-        title: 'Ürün Geri Bildirim Formu',
-        description: 'Yeni ürünler hakkında kullanıcı geri bildirimleri',
-        creator: 'product@company.com',
-        status: 'completed',
-        responses: 67,
-        createdAt: '2024-01-28T16:45:00Z'
-      },
-      {
-        id: 4,
-        title: 'Eğitim Değerlendirme Anketi',
-        description: 'Verilen eğitimlerin etkinliğini değerlendiren anket',
-        creator: 'training@company.com',
-        status: 'draft',
-        responses: 0,
-        createdAt: '2024-02-10T09:15:00Z'
+      error: () => {
+        this.totalSurveys = 0;
       }
-    ];
-    
-    this.filteredSurveys = [...this.surveys];
+    });
+
+    // Toplam yanıt sayısı
+    this.api.getAdminResponsesCount().subscribe({
+      next: (res: any) => {
+        this.totalResponses = res?.count ?? 0;
+      },
+      error: () => {
+        this.totalResponses = 0;
+      }
+    });
+  }
+
+  loadSurveys(): void {
+    // Gerekirse pageSize artırılabilir
+    this.api.getAdminSurveysPaged(1, 200).subscribe({
+      next: (res: any) => {
+        const items = res?.items || [];
+        const mapped = items.map((s: any) => ({
+          id: s.surveyId ?? s.id,
+          title: s.title ?? s.surveyTitle ?? `#${s.surveyId ?? s.id}`,
+          description: s.description ?? '',
+          creator: s.creatorEmail ?? (s.creatorId ? `user:${s.creatorId}` : '-'),
+          status: s.isActive ? 'active' : (s.isDraft ? 'draft' : 'completed'),
+          responses: s.responseCount ?? s.responsesCount ?? 0,
+          createdAt: s.createdAt ?? s.createdOn ?? new Date().toISOString(),
+          isActive: !!s.isActive
+        }));
+
+        this.surveys = mapped;
+        this.filteredSurveys = [...this.surveys];
+
+        // Aktif anket sayısı liste üzerinden
+        this.activeSurveys = mapped.filter((m: any) => m.isActive).length;
+
+        // Toplam anket sayısı fallback
+        if (!this.totalSurveys && typeof res?.total === 'number') {
+          this.totalSurveys = res.total;
+        } else if (!this.totalSurveys) {
+          this.totalSurveys = mapped.length;
+        }
+      },
+      error: (err) => {
+        console.error('Anketler yüklenirken hata:', err);
+        this.surveys = [];
+        this.filteredSurveys = [];
+        this.activeSurveys = 0;
+      }
+    });
   }
 
   onSearch(event: any): void {
@@ -519,9 +538,9 @@ export class AdminSurveysComponent implements OnInit {
   applyFilters(): void {
     this.filteredSurveys = this.surveys.filter(survey => {
       const matchesSearch = !this.searchTerm || 
-        survey.title.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-        survey.description.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-        survey.creator.toLowerCase().includes(this.searchTerm.toLowerCase());
+        (survey.title || '').toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+        (survey.description || '').toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+        (survey.creator || '').toLowerCase().includes(this.searchTerm.toLowerCase());
       
       const matchesStatus = this.filterStatus === 'all' || survey.status === this.filterStatus;
       
