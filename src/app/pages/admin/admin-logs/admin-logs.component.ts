@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ChangeDetectorRef } from '@angular/core';
 import { Router } from '@angular/router';
 import { ApiService } from '../../../services/api.service';
 import { HttpClient } from '@angular/common/http';
@@ -12,7 +12,7 @@ import { environment } from '../../../../environments/environment';
   templateUrl: './admin-logs.component.html',
   styleUrls: ['./admin-logs.component.scss']
 })
-export class AdminLogsComponent implements OnInit {
+export class AdminLogsComponent implements OnInit, AfterViewInit {
   logs: any[] = [];
   filteredLogs: any[] = [];
   filterType = 'all';
@@ -20,17 +20,42 @@ export class AdminLogsComponent implements OnInit {
   currentPage = 1;
   itemsPerPage = 25;
   total = 0;
+  isLoading = false;
+  dataLoaded = false;
   
-  // Yeni eklenen: Log türü seçimi
+  // Log türü seçimi
   logType = 'all'; // 'all', 'admin', 'user'
 
   constructor(
     private router: Router, 
     private api: ApiService,
-    private http: HttpClient
+    private http: HttpClient,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
+    console.log('🔄 Admin Logs Component - ngOnInit');
+    // Component başlatıldığında hemen logları yükle
+    this.initializeLogs();
+  }
+
+  ngAfterViewInit(): void {
+    console.log('🔄 Admin Logs Component - ngAfterViewInit');
+    // View hazır olduktan sonra tekrar kontrol et
+    if (!this.dataLoaded) {
+      console.log(' View hazır, loglar tekrar yükleniyor...');
+      this.initializeLogs();
+    }
+  }
+
+  // Logları başlat
+  private initializeLogs(): void {
+    if (this.dataLoaded) {
+      console.log('⚠️ Loglar zaten yüklenmiş, tekrar yüklenmiyor');
+      return;
+    }
+
+    console.log('🔄 Loglar başlatılıyor...');
     this.loadLogs();
   }
 
@@ -42,59 +67,73 @@ export class AdminLogsComponent implements OnInit {
   }
 
   loadLogs(): void {
+    console.log(`🔄 Loglar yükleniyor... Log türü: ${this.logType}`);
+    this.isLoading = true;
+
     if (this.logType === 'admin') {
-      // Sadece admin logları
       this.loadAdminLogs();
     } else if (this.logType === 'user') {
-      // Sadece kullanıcı logları
       this.loadUserLogs();
     } else {
-      // Tüm loglar (hem admin hem kullanıcı)
       this.loadAllLogs();
     }
   }
 
   // Admin logları yükle
   loadAdminLogs(): void {
+    console.log('🔍 Admin logları yükleniyor...');
     this.api.getAdminLogsPaged(this.currentPage, this.itemsPerPage).subscribe({
       next: (res: any) => {
+        console.log('✅ Admin logları yüklendi:', res);
         this.processLogsResponse(res);
+        this.isLoading = false;
+        this.dataLoaded = true;
+        this.cdr.detectChanges(); // Change detection'ı zorla
       },
       error: (err) => {
-        console.error('Admin logları yüklenirken hata:', err);
+        console.error('❌ Admin logları yüklenirken hata:', err);
         this.handleError();
+        this.isLoading = false;
+        this.cdr.detectChanges();
       }
     });
   }
 
-  // Kullanıcı logları yükle (yeni endpoint)
+  // Kullanıcı logları yükle
   loadUserLogs(): void {
-    // Backend'de /api/Logs/user endpoint'i varsa kullan
+    console.log('🔍 Kullanıcı logları yükleniyor...');
     const endpoint = `/api/Logs/user?page=${this.currentPage}&pageSize=${this.itemsPerPage}`;
     this.http.get(`${environment.apiUrl}${endpoint}`).subscribe({
       next: (res: any) => {
+        console.log('✅ Kullanıcı logları yüklendi:', res);
         this.processLogsResponse(res);
+        this.isLoading = false;
+        this.dataLoaded = true;
+        this.cdr.detectChanges();
       },
       error: (err) => {
-        console.error('Kullanıcı logları yüklenirken hata:', err);
-        // Fallback: genel log endpoint'ini dene
+        console.error('❌ Kullanıcı logları yüklenirken hata:', err);
+        console.log('🔄 Fallback: Genel log endpoint\'i deneniyor...');
         this.loadAllLogs();
       }
     });
   }
 
-  // Tüm logları yükle (yeni endpoint)
+  // Tüm logları yükle
   loadAllLogs(): void {
-    // Backend'de /api/Logs endpoint'i varsa kullan
+    console.log('🔍 Tüm loglar yükleniyor...');
     const endpoint = `/api/Logs?page=${this.currentPage}&pageSize=${this.itemsPerPage}`;
     this.http.get(`${environment.apiUrl}${endpoint}`).subscribe({
       next: (res: any) => {
+        console.log('✅ Tüm loglar yüklendi:', res);
         this.processLogsResponse(res);
+        this.isLoading = false;
+        this.dataLoaded = true;
+        this.cdr.detectChanges();
       },
       error: (err) => {
-        console.error('Tüm loglar yüklenirken hata:', err);
-        // Fallback: admin loglarına geri dön
-        console.log('Fallback: Admin logları yükleniyor...');
+        console.error('❌ Tüm loglar yüklenirken hata:', err);
+        console.log('🔄 Fallback: Admin loglarına geri dönülüyor...');
         this.loadAdminLogs();
       }
     });
@@ -102,8 +141,10 @@ export class AdminLogsComponent implements OnInit {
 
   // Log response'ını işle
   private processLogsResponse(res: any): void {
-    const items = res?.items || res?.data || [];
+    const items = res?.items || res?.data || res || [];
     this.total = res?.total || res?.count || items.length;
+    
+    console.log(`📊 ${items.length} log işleniyor, toplam: ${this.total}`);
     
     this.logs = items.map((l: any) => ({
       id: l.logId ?? l.id ?? Math.random(),
@@ -117,6 +158,12 @@ export class AdminLogsComponent implements OnInit {
     }));
     
     this.filteredLogs = [...this.logs];
+    
+    console.log(`✅ ${this.logs.length} log başarıyla işlendi`);
+    console.log('📋 Log örnekleri:', this.logs.slice(0, 2));
+    
+    // Change detection'ı zorla
+    this.cdr.detectChanges();
   }
 
   // Log durumunu belirle
@@ -129,9 +176,11 @@ export class AdminLogsComponent implements OnInit {
 
   // Hata durumunda
   private handleError(): void {
+    console.warn('⚠️ Hata durumunda loglar temizleniyor');
     this.logs = [];
     this.filteredLogs = [];
     this.total = 0;
+    this.dataLoaded = false;
   }
 
   filterLogs(): void {

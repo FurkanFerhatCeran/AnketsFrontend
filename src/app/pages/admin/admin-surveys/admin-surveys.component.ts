@@ -1,7 +1,9 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ChangeDetectorRef } from '@angular/core';
 import { Router } from '@angular/router';
 import { ApiService } from '../../../services/api.service';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-admin-surveys',
@@ -447,7 +449,7 @@ import { ApiService } from '../../../services/api.service';
     }
   `]
 })
-export class AdminSurveysComponent implements OnInit {
+export class AdminSurveysComponent implements OnInit, AfterViewInit {
   totalSurveys = 0;
   activeSurveys = 0;
   totalResponses = 0;
@@ -456,23 +458,58 @@ export class AdminSurveysComponent implements OnInit {
   filteredSurveys: any[] = [];
   searchTerm = '';
   filterStatus = 'all';
+  isLoading = false;
+  dataLoaded = false;
 
-  constructor(private router: Router, private api: ApiService) {}
+  constructor(
+    private router: Router, 
+    private api: ApiService,
+    private http: HttpClient,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit(): void {
+    console.log('🔄 Admin Surveys Component - ngOnInit');
+    // Component başlatıldığında hemen verileri yükle
+    this.initializeData();
+  }
+
+  ngAfterViewInit(): void {
+    console.log('🔄 Admin Surveys Component - ngAfterViewInit');
+    // View hazır olduktan sonra tekrar kontrol et
+    if (!this.dataLoaded) {
+      console.log(' View hazır, veriler tekrar yükleniyor...');
+      this.initializeData();
+    }
+  }
+
+  // Verileri başlat
+  private initializeData(): void {
+    if (this.dataLoaded) {
+      console.log('⚠️ Veriler zaten yüklenmiş, tekrar yüklenmiyor');
+      return;
+    }
+
+    console.log('🔄 Veriler başlatılıyor...');
     this.loadStats();
     this.loadSurveys();
   }
 
   // Genel istatistikleri yükle
   loadStats(): void {
+    console.log('📊 İstatistikler yükleniyor...');
+    
     // Toplam anket sayısı
     this.api.getAdminSurveysPaged(1, 1).subscribe({
       next: (res: any) => {
         this.totalSurveys = res?.total ?? 0;
+        console.log(`✅ Toplam anket sayısı: ${this.totalSurveys}`);
+        this.cdr.detectChanges();
       },
-      error: () => {
+      error: (err) => {
+        console.error('❌ Toplam anket sayısı yüklenirken hata:', err);
         this.totalSurveys = 0;
+        this.cdr.detectChanges();
       }
     });
 
@@ -480,49 +517,127 @@ export class AdminSurveysComponent implements OnInit {
     this.api.getAdminResponsesCount().subscribe({
       next: (res: any) => {
         this.totalResponses = res?.count ?? 0;
+        console.log(`✅ Toplam yanıt sayısı: ${this.totalResponses}`);
+        this.cdr.detectChanges();
       },
-      error: () => {
+      error: (err) => {
+        console.error('❌ Toplam yanıt sayısı yüklenirken hata:', err);
         this.totalResponses = 0;
+        this.cdr.detectChanges();
       }
     });
   }
 
+  // Anket listesini yükle
   loadSurveys(): void {
-    // Gerekirse pageSize artırılabilir
+    this.isLoading = true;
+    console.log('🔄 Anketler yükleniyor...');
+
+    // Backend'den anketleri çek
     this.api.getAdminSurveysPaged(1, 200).subscribe({
       next: (res: any) => {
+        console.log('✅ Backend yanıtı:', res);
         const items = res?.items || [];
-        const mapped = items.map((s: any) => ({
-          id: s.surveyId ?? s.id,
-          title: s.title ?? s.surveyTitle ?? `#${s.surveyId ?? s.id}`,
-          description: s.description ?? '',
-          creator: s.creatorEmail ?? (s.creatorId ? `user:${s.creatorId}` : '-'),
-          status: s.isActive ? 'active' : (s.isDraft ? 'draft' : 'completed'),
-          responses: s.responseCount ?? s.responsesCount ?? 0,
-          createdAt: s.createdAt ?? s.createdOn ?? new Date().toISOString(),
-          isActive: !!s.isActive
-        }));
-
-        this.surveys = mapped;
-        this.filteredSurveys = [...this.surveys];
-
-        // Aktif anket sayısı liste üzerinden
-        this.activeSurveys = mapped.filter((m: any) => m.isActive).length;
-
-        // Toplam anket sayısı fallback
-        if (!this.totalSurveys && typeof res?.total === 'number') {
-          this.totalSurveys = res.total;
-        } else if (!this.totalSurveys) {
-          this.totalSurveys = mapped.length;
+        
+        if (items.length > 0) {
+          // Her anket için yanıt sayısını çek
+          this.loadSurveyResponses(items);
+        } else {
+          this.processSurveysResponse(res);
         }
       },
       error: (err) => {
-        console.error('Anketler yüklenirken hata:', err);
+        console.error('❌ Anketler yüklenirken hata:', err);
+        this.isLoading = false;
         this.surveys = [];
         this.filteredSurveys = [];
         this.activeSurveys = 0;
+        this.cdr.detectChanges();
       }
     });
+  }
+
+  // Her anket için yanıt sayısını çek
+  private loadSurveyResponses(surveys: any[]): void {
+    console.log(' Yanıt sayıları yükleniyor...');
+    
+    const surveyPromises = surveys.map(survey => {
+      const surveyId = survey.surveyId ?? survey.id;
+      return this.getSurveyResponseCount(surveyId).then(count => ({
+        ...survey,
+        responseCount: count
+      }));
+    });
+
+    Promise.all(surveyPromises).then(enhancedSurveys => {
+      console.log('✅ Yanıt sayıları yüklendi:', enhancedSurveys);
+      this.processSurveysResponse({ items: enhancedSurveys, total: surveys.length });
+    }).catch(err => {
+      console.error('❌ Yanıt sayıları yüklenirken hata:', err);
+      // Hata durumunda yanıt sayısı olmadan devam et
+      this.processSurveysResponse({ items: surveys, total: surveys.length });
+    });
+  }
+
+  // Tek bir anket için yanıt sayısını çek
+  private async getSurveyResponseCount(surveyId: number): Promise<number> {
+    try {
+      // Önce API servisinden dene
+      const response = await this.api.getSurveyStatistics(surveyId).toPromise();
+      return response?.totalResponses ?? response?.responseCount ?? 0;
+    } catch (err) {
+      // API servisi çalışmazsa direkt HTTP ile dene
+      try {
+        const response = await this.http.get(`${environment.apiUrl}/api/SurveyResponses/statistics/${surveyId}`).toPromise() as any;
+        return response?.totalResponses ?? response?.responseCount ?? response?.count ?? 0;
+      } catch (httpErr) {
+        console.warn(`⚠️ Anket ${surveyId} için yanıt sayısı alınamadı:`, httpErr);
+        return 0;
+      }
+    }
+  }
+
+  // Anket response'unu işle
+  private processSurveysResponse(res: any): void {
+    const items = res?.items || [];
+    console.log(` ${items.length} anket işleniyor...`);
+    
+    const mapped = items.map((s: any) => ({
+      id: s.surveyId ?? s.id,
+      title: s.title ?? s.surveyTitle ?? `#${s.surveyId ?? s.id}`,
+      description: s.description ?? '',
+      creator: s.creatorEmail ?? (s.creatorId ? `user:${s.creatorId}` : '-'),
+      status: s.isActive ? 'active' : (s.isDraft ? 'draft' : 'completed'),
+      responses: s.responseCount ?? s.responsesCount ?? s.responseCount ?? 0,
+      createdAt: s.createdAt ?? s.createdOn ?? new Date().toISOString(),
+      isActive: !!s.isActive
+    }));
+
+    this.surveys = mapped;
+    this.filteredSurveys = [...this.surveys];
+
+    // Aktif anket sayısı liste üzerinden
+    this.activeSurveys = mapped.filter((m: any) => m.isActive).length;
+
+    // Toplam anket sayısı fallback
+    if (!this.totalSurveys && typeof res?.total === 'number') {
+      this.totalSurveys = res.total;
+    } else if (!this.totalSurveys) {
+      this.totalSurveys = mapped.length;
+    }
+
+    // Toplam yanıt sayısını hesapla (fallback)
+    if (!this.totalResponses) {
+      this.totalResponses = mapped.reduce((sum: number, survey: any) => sum + (survey.responses || 0), 0);
+    }
+
+    this.isLoading = false;
+    this.dataLoaded = true;
+    
+    console.log(`✅ ${this.surveys.length} anket yüklendi, toplam yanıt: ${this.totalResponses}`);
+    
+    // Change detection'ı zorla
+    this.cdr.detectChanges();
   }
 
   onSearch(event: any): void {
